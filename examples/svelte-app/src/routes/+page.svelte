@@ -16,7 +16,7 @@
 
 <HyperMemoryProvider apiKey={API_KEY}>
   <main>
-    <h1>HyperMemory Knowledge Graph</h1>
+    <h1>HyperMemory Hypergraph</h1>
 
     <div class="controls">
       <label>

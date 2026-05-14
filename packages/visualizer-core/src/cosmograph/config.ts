@@ -10,7 +10,7 @@ export interface CosmographSimulationConfig {
 	decay: number;
 }
 
-/** Default simulation parameters tuned for knowledge graph layouts. */
+/** Default simulation parameters tuned for hypergraph layouts. */
 export const DEFAULT_SIMULATION: CosmographSimulationConfig = {
 	gravity: 0.15,
 	repulsion: 6.0,

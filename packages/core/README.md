@@ -1,6 +1,6 @@
 # @hypermemory/core
 
-Framework-agnostic TypeScript client for the HyperMemory knowledge graph API.
+Framework-agnostic TypeScript client for the HyperMemory hypergraph API.
 
 ## Installation
 

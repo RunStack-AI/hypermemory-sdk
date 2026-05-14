@@ -5,7 +5,7 @@
 
 // ─── Shared Types ──────────────────────────────────────────────────────────────
 
-/** Relationship between two nodes in the knowledge graph. */
+/** Relationship between two nodes in the hypergraph. */
 export interface Relationship {
 	/** Target node key */
 	to_key: string;
@@ -15,7 +15,7 @@ export interface Relationship {
 
 // ─── Request Types ─────────────────────────────────────────────────────────────
 
-/** Request to store a new node in the knowledge graph. */
+/** Request to store a new node in the hypergraph. */
 export interface StoreRequest {
 	/** Unique identifier for this node */
 	key: string;
@@ -31,7 +31,7 @@ export interface StoreRequest {
 	relationships?: Relationship[];
 }
 
-/** Request to recall (search) from the knowledge graph. */
+/** Request to recall (search) from the hypergraph. */
 export interface RecallRequest {
 	/** Natural language query or keyword search */
 	query: string;

@@ -1,6 +1,6 @@
 # @hypermemory/visualizer-core
 
-Framework-agnostic graph visualization for HyperMemory knowledge graphs. Provides two viewer classes:
+Framework-agnostic graph visualization for HyperMemory hypergraphs. Provides two viewer classes:
 
 - **CosmographViewer** — GPU-accelerated 2D with hyperedge hull rendering
 - **ForceGraph3DViewer** — Three.js 3D with camera fly-to

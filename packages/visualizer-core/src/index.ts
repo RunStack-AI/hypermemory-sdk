@@ -1,7 +1,7 @@
 /**
  * @hypermemory/visualizer-core
  *
- * Framework-agnostic graph visualization for HyperMemory knowledge graphs.
+ * Framework-agnostic graph visualization for HyperMemory hypergraphs.
  * Provides two viewer classes that mount to any DOM element:
  *
  * - **CosmographViewer** — GPU-accelerated 2D visualization with hyperedge hulls

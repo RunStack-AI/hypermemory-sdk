@@ -1,7 +1,7 @@
 /**
  * @hypermemory/svelte
  *
- * Svelte 5 components for HyperMemory knowledge graph visualization and client access.
+ * Svelte 5 components for HyperMemory hypergraph visualization and client access.
  *
  * @packageDocumentation
  */

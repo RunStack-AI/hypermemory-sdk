@@ -1,5 +1,5 @@
 /**
- * HyperMemoryClient — the main SDK client for interacting with the HyperMemory knowledge graph.
+ * HyperMemoryClient — the main SDK client for interacting with the HyperMemory hypergraph.
  *
  * @example
  * ```typescript
@@ -59,7 +59,7 @@ export class HyperMemoryClient {
 	}
 
 	/**
-	 * Store a new node in the knowledge graph.
+	 * Store a new node in the hypergraph.
 	 *
 	 * @param request - Node data including key, description, and optional relationships
 	 * @returns Confirmation of storage with detected types
@@ -88,7 +88,7 @@ export class HyperMemoryClient {
 	}
 
 	/**
-	 * Search the knowledge graph using semantic or keyword matching.
+	 * Search the hypergraph using semantic or keyword matching.
 	 *
 	 * @param request - Query parameters
 	 * @returns Ranked results with relevance scores
@@ -113,7 +113,7 @@ export class HyperMemoryClient {
 	}
 
 	/**
-	 * Update an existing node in the knowledge graph.
+	 * Update an existing node in the hypergraph.
 	 *
 	 * @param request - Fields to update (only provided fields are changed)
 	 * @returns Confirmation with any newly detected types
@@ -136,7 +136,7 @@ export class HyperMemoryClient {
 	}
 
 	/**
-	 * Delete a node from the knowledge graph.
+	 * Delete a node from the hypergraph.
 	 *
 	 * @param key - Node key to delete
 	 * @param cascade - Whether to also delete orphaned relationships (default: false)
@@ -160,7 +160,7 @@ export class HyperMemoryClient {
 	}
 
 	/**
-	 * Get a high-level overview of the knowledge graph.
+	 * Get a high-level overview of the hypergraph.
 	 *
 	 * @returns Node/edge/hyperedge counts and type list
 	 *
@@ -180,7 +180,7 @@ export class HyperMemoryClient {
 	}
 
 	/**
-	 * Ingest unstructured text into the knowledge graph.
+	 * Ingest unstructured text into the hypergraph.
 	 * Automatically extracts entities and relationships.
 	 *
 	 * @param request - Text to ingest with optional context

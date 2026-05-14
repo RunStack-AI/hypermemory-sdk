@@ -1,7 +1,7 @@
 /**
  * @hypermemory/core
  *
- * Official HyperMemory SDK for building applications on the HyperMemory knowledge graph.
+ * Official HyperMemory SDK for building applications on the HyperMemory hypergraph.
  * Store, recall, traverse, and visualize interconnected knowledge.
  *
  * @packageDocumentation

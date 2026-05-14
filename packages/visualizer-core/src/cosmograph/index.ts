@@ -1,7 +1,7 @@
 /**
  * CosmographViewer — GPU-accelerated 2D graph visualization using Cosmograph.
  *
- * Mounts to any DOM element and renders an interactive knowledge graph
+ * Mounts to any DOM element and renders an interactive hypergraph
  * with force-directed layout, hyperedge hull rendering, and node filtering.
  *
  * @example

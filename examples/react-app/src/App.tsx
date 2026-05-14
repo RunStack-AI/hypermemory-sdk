@@ -49,7 +49,7 @@ export default function App() {
 	return (
 		<HyperMemoryProvider apiKey={API_KEY}>
 			<main style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem" }}>
-				<h1>HyperMemory Knowledge Graph</h1>
+				<h1>HyperMemory Hypergraph</h1>
 				<GraphPage />
 			</main>
 		</HyperMemoryProvider>

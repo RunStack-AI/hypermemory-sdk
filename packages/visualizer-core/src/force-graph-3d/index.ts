@@ -1,7 +1,7 @@
 /**
  * ForceGraph3DViewer — Three.js-based 3D graph visualization using 3d-force-graph.
  *
- * Mounts to any DOM element and renders an interactive 3D knowledge graph
+ * Mounts to any DOM element and renders an interactive 3D hypergraph
  * with sphere nodes, neighbor highlighting, and camera fly-to on selection.
  *
  * @example
