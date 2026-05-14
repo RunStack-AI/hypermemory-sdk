@@ -246,10 +246,10 @@ Per-minute sliding window by plan:
 
 | Operation | Free | Basic | Pro | Business | Enterprise |
 |-----------|------|-------|-----|----------|-----------|
-| Write (store/update/forget) | 10 | 20 | 60 | 120 | 300 |
-| Ingest | 3 | 5 | 15 | 30 | 60 |
-| Read (recall/overview/etc) | 30 | 60 | 120 | 240 | 600 |
-| HTTP mutations | 60/min | 120 | 300 | 600 | Unlimited |
+| Write (store/update/forget) | 10 | 20 | 60 | 120 | Custom |
+| Ingest (ingest/upload) | 3 | 10 | 30 | 100 | Custom |
+| Read (recall/overview/etc) | 30 | 60 | 120 | 240 | Custom |
+| HTTP mutations | 60/min | 120 | 300 | 600 | Custom |
 
 ## AI Agent Skill File
 
