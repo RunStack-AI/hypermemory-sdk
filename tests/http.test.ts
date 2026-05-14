@@ -24,7 +24,10 @@ function createClient(opts?: { maxRetries?: number; timeout?: number; onRequest?
 
 function mockResponse(status: number, body: object | string, headers?: Record<string, string>) {
 	const h = new Headers(headers);
-	return new Response(typeof body === "string" ? body : JSON.stringify(body), { status, headers: h });
+	return new Response(typeof body === "string" ? body : JSON.stringify(body), {
+		status,
+		headers: h,
+	});
 }
 
 describe("HttpClient", () => {
@@ -50,7 +53,9 @@ describe("HttpClient", () => {
 	it("throws AuthenticationError on 401", async () => {
 		fetchMock.mockResolvedValueOnce(mockResponse(401, { detail: "Invalid key" }));
 		const client = createClient();
-		await expect(client.request({ method: "GET", path: "/test" })).rejects.toBeInstanceOf(AuthenticationError);
+		await expect(client.request({ method: "GET", path: "/test" })).rejects.toBeInstanceOf(
+			AuthenticationError,
+		);
 	});
 
 	it("throws PlanLimitError on 403 with plan field", async () => {
@@ -64,19 +69,25 @@ describe("HttpClient", () => {
 	it("throws ForbiddenError on 403 without plan field", async () => {
 		fetchMock.mockResolvedValueOnce(mockResponse(403, { detail: "Not allowed" }));
 		const client = createClient();
-		await expect(client.request({ method: "GET", path: "/test" })).rejects.toBeInstanceOf(ForbiddenError);
+		await expect(client.request({ method: "GET", path: "/test" })).rejects.toBeInstanceOf(
+			ForbiddenError,
+		);
 	});
 
 	it("throws BadRequestError on 400", async () => {
 		fetchMock.mockResolvedValueOnce(mockResponse(400, { detail: "Bad input" }));
 		const client = createClient();
-		await expect(client.request({ method: "POST", path: "/test" })).rejects.toBeInstanceOf(BadRequestError);
+		await expect(client.request({ method: "POST", path: "/test" })).rejects.toBeInstanceOf(
+			BadRequestError,
+		);
 	});
 
 	it("throws ValidationError on 422", async () => {
 		fetchMock.mockResolvedValueOnce(mockResponse(422, { detail: "Missing field" }));
 		const client = createClient();
-		await expect(client.request({ method: "POST", path: "/test" })).rejects.toBeInstanceOf(ValidationError);
+		await expect(client.request({ method: "POST", path: "/test" })).rejects.toBeInstanceOf(
+			ValidationError,
+		);
 	});
 
 	it("honors Retry-After header on 429", async () => {
@@ -96,7 +107,9 @@ describe("HttpClient", () => {
 	it("throws RateLimitError with retryAfter from header", async () => {
 		fetchMock.mockResolvedValueOnce(mockResponse(429, { detail: "slow" }, { "Retry-After": "42" }));
 		const client = createClient({ maxRetries: 0 });
-		const err: RateLimitError = await client.request({ method: "GET", path: "/test" }).catch((e) => e);
+		const err: RateLimitError = await client
+			.request({ method: "GET", path: "/test" })
+			.catch((e) => e);
 		expect(err).toBeInstanceOf(RateLimitError);
 		expect(err.retryAfter).toBe(42);
 	});
@@ -104,7 +117,9 @@ describe("HttpClient", () => {
 	it("does NOT retry POST on 503", async () => {
 		fetchMock.mockResolvedValueOnce(mockResponse(503, { detail: "Unavailable" }));
 		const client = createClient({ maxRetries: 3 });
-		await expect(client.request({ method: "POST", path: "/test" })).rejects.toBeInstanceOf(ServerError);
+		await expect(client.request({ method: "POST", path: "/test" })).rejects.toBeInstanceOf(
+			ServerError,
+		);
 		expect(fetchMock).toHaveBeenCalledTimes(1);
 	});
 
@@ -129,7 +144,9 @@ describe("HttpClient", () => {
 		ac.abort();
 		fetchMock.mockRejectedValueOnce(new DOMException("Aborted", "AbortError"));
 		const client = createClient();
-		const err = await client.request({ method: "GET", path: "/test", signal: ac.signal }).catch((e) => e);
+		const err = await client
+			.request({ method: "GET", path: "/test", signal: ac.signal })
+			.catch((e) => e);
 		expect(err).toBeInstanceOf(NetworkError);
 		expect(err.message).toBe("Request was cancelled");
 	});
@@ -137,10 +154,15 @@ describe("HttpClient", () => {
 	it("throws TimeoutError after maxRetries on timeout", async () => {
 		vi.useRealTimers();
 		fetchMock.mockImplementation(
-			() => new Promise((_, reject) => setTimeout(() => reject(new DOMException("Aborted", "AbortError")), 5)),
+			() =>
+				new Promise((_, reject) =>
+					setTimeout(() => reject(new DOMException("Aborted", "AbortError")), 5),
+				),
 		);
 		const client = createClient({ maxRetries: 1, timeout: 10 });
-		await expect(client.request({ method: "GET", path: "/test" })).rejects.toBeInstanceOf(TimeoutError);
+		await expect(client.request({ method: "GET", path: "/test" })).rejects.toBeInstanceOf(
+			TimeoutError,
+		);
 		expect(fetchMock).toHaveBeenCalledTimes(2);
 	});
 
@@ -161,7 +183,9 @@ describe("HttpClient", () => {
 
 	it("retries 429 on POST (rate limit means request was not processed)", async () => {
 		fetchMock
-			.mockResolvedValueOnce(mockResponse(429, { detail: "slow", retry_after: 1 }, { "Retry-After": "1" }))
+			.mockResolvedValueOnce(
+				mockResponse(429, { detail: "slow", retry_after: 1 }, { "Retry-After": "1" }),
+			)
 			.mockResolvedValueOnce(mockResponse(200, { ok: true }));
 
 		const client = createClient({ maxRetries: 1 });

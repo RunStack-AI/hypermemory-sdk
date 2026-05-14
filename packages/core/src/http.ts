@@ -35,7 +35,7 @@ export interface RequestOptions {
 }
 
 type AttemptResult<T> =
-	| { type: "success"; data: T }
+	| { type: "success"; data: T; status: number }
 	| { type: "retry"; error: Error; status: number }
 	| { type: "fatal"; error: Error; status: number };
 
@@ -73,7 +73,7 @@ export class HttpClient {
 
 			switch (result.type) {
 				case "success":
-					this.onRequest?.(options.method, url, 200, duration);
+					this.onRequest?.(options.method, url, result.status, duration);
 					return result.data;
 
 				case "retry":
@@ -115,7 +115,7 @@ export class HttpClient {
 
 			if (response.ok) {
 				const data = (await response.json()) as T;
-				return { type: "success", data };
+				return { type: "success", data, status: response.status };
 			}
 
 			const errorBody = await response.text();

@@ -3,6 +3,10 @@
  *
  * Must be called inside a component tree wrapped by `<HyperMemoryProvider>`.
  *
+ * Note: If `apiKey` changes at runtime, the provider creates a new client automatically.
+ * Components that cache the return value in a plain `let` should re-call this inside a
+ * reactive context (`$derived` or `$effect`) to pick up the new client.
+ *
  * @example
  * ```svelte
  * <script>

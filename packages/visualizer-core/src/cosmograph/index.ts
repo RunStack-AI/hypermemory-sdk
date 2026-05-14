@@ -60,6 +60,10 @@ export class CosmographViewer {
 	private hoveredHullIdx = -1;
 	private mouseX = -1;
 	private mouseY = -1;
+	private hullDirtyMouse = false;
+	private containerWidth = 0;
+	private containerHeight = 0;
+	private resizeObserver: ResizeObserver | null = null;
 
 	private boundMouseMove: ((e: MouseEvent) => void) | null = null;
 	private boundMouseLeave: (() => void) | null = null;
@@ -185,6 +189,10 @@ export class CosmographViewer {
 			this.hullRafId = null;
 		}
 		this.removeHullCanvasListeners();
+		if (this.resizeObserver) {
+			this.resizeObserver.disconnect();
+			this.resizeObserver = null;
+		}
 		if (this.cosmographInstance) {
 			const instance = this.cosmographInstance as { destroy?: () => void };
 			instance.destroy?.();
@@ -261,7 +269,6 @@ export class CosmographViewer {
 
 			this.cosmographInstance = new Cosmograph(this.container, config);
 			this.setupHullCanvas();
-			setTimeout(() => this.scheduleHullDraw(), 600);
 		} catch {
 			this.renderFallback();
 		}
@@ -275,7 +282,7 @@ export class CosmographViewer {
 
 		const canvas = document.createElement("canvas");
 		canvas.style.cssText =
-			"position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:auto;z-index:1;";
+			"position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;";
 		canvas.style.display = this.showHyperedges ? "block" : "none";
 
 		this.container.style.position = "relative";
@@ -285,19 +292,36 @@ export class CosmographViewer {
 
 		this.boundMouseMove = (e: MouseEvent) => this.handleHullMouseMove(e);
 		this.boundMouseLeave = () => this.handleHullMouseLeave();
-		this.boundClick = (_e: MouseEvent) => this.handleHullClick();
+		this.boundClick = (e: MouseEvent) => this.handleHullClick(e);
 
-		canvas.addEventListener("mousemove", this.boundMouseMove);
-		canvas.addEventListener("mouseleave", this.boundMouseLeave);
-		canvas.addEventListener("click", this.boundClick);
+		this.container.addEventListener("mousemove", this.boundMouseMove);
+		this.container.addEventListener("mouseleave", this.boundMouseLeave);
+		this.container.addEventListener("click", this.boundClick);
+
+		this.setupResizeObserver();
+	}
+
+	private setupResizeObserver(): void {
+		if (this.resizeObserver) this.resizeObserver.disconnect();
+		this.resizeObserver = new ResizeObserver((entries) => {
+			for (const entry of entries) {
+				this.containerWidth = entry.contentRect.width;
+				this.containerHeight = entry.contentRect.height;
+			}
+			this.scheduleHullDraw();
+		});
+		this.resizeObserver.observe(this.container);
+
+		const rect = this.container.getBoundingClientRect();
+		this.containerWidth = rect.width;
+		this.containerHeight = rect.height;
 	}
 
 	private removeHullCanvasListeners(): void {
-		if (!this.hullCanvas) return;
-		if (this.boundMouseMove) this.hullCanvas.removeEventListener("mousemove", this.boundMouseMove);
+		if (this.boundMouseMove) this.container.removeEventListener("mousemove", this.boundMouseMove);
 		if (this.boundMouseLeave)
-			this.hullCanvas.removeEventListener("mouseleave", this.boundMouseLeave);
-		if (this.boundClick) this.hullCanvas.removeEventListener("click", this.boundClick);
+			this.container.removeEventListener("mouseleave", this.boundMouseLeave);
+		if (this.boundClick) this.container.removeEventListener("click", this.boundClick);
 		this.boundMouseMove = null;
 		this.boundMouseLeave = null;
 		this.boundClick = null;
@@ -312,13 +336,14 @@ export class CosmographViewer {
 		this.hullRafId = null;
 		if (!this.hullCanvas || !this.cosmographInstance || this.destroyed) return;
 
-		const rect = this.container.getBoundingClientRect();
-		this.syncCanvasSize(this.hullCanvas, rect.width, rect.height);
+		const w = this.containerWidth;
+		const h = this.containerHeight;
+		this.syncCanvasSize(this.hullCanvas, w, h);
 
 		const ctx = this.hullCanvas.getContext("2d");
 		if (!ctx) return;
 
-		ctx.clearRect(0, 0, rect.width, rect.height);
+		ctx.clearRect(0, 0, w, h);
 
 		if (!this.showHyperedges || this.hyperedges.length === 0) return;
 
@@ -326,14 +351,24 @@ export class CosmographViewer {
 		if (!hullShapes) return;
 
 		this.renderHullFills(ctx, hullShapes);
-		this.detectHoveredHull(ctx, hullShapes);
+		if (this.hullDirtyMouse) {
+			this.detectHoveredHull(ctx, hullShapes);
+			this.hullDirtyMouse = false;
+		}
 		this.renderHoverHighlight(ctx, hullShapes);
 	}
 
 	private syncCanvasSize(canvas: HTMLCanvasElement, w: number, h: number): void {
-		if (canvas.width !== w || canvas.height !== h) {
-			canvas.width = w;
-			canvas.height = h;
+		const dpr = window.devicePixelRatio || 1;
+		const pw = Math.round(w * dpr);
+		const ph = Math.round(h * dpr);
+		if (canvas.width !== pw || canvas.height !== ph) {
+			canvas.width = pw;
+			canvas.height = ph;
+			canvas.style.width = `${w}px`;
+			canvas.style.height = `${h}px`;
+			const ctx = canvas.getContext("2d");
+			ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
 		}
 	}
 
@@ -405,7 +440,6 @@ export class CosmographViewer {
 		ctx: CanvasRenderingContext2D,
 		hullShapes: { x: number; y: number }[][],
 	): void {
-		if (!this.hullCanvas) return;
 		const shape = this.hoveredHullIdx >= 0 ? hullShapes[this.hoveredHullIdx] : undefined;
 		if (shape && shape.length >= 2) {
 			ctx.beginPath();
@@ -413,9 +447,9 @@ export class CosmographViewer {
 			ctx.strokeStyle = HULL_HOVER_STROKE;
 			ctx.lineWidth = 2;
 			ctx.stroke();
-			this.hullCanvas.style.cursor = "pointer";
+			this.container.style.cursor = "pointer";
 		} else {
-			this.hullCanvas.style.cursor = "default";
+			this.container.style.cursor = "";
 		}
 	}
 
@@ -450,6 +484,7 @@ export class CosmographViewer {
 		const rect = this.container.getBoundingClientRect();
 		this.mouseX = event.clientX - rect.left;
 		this.mouseY = event.clientY - rect.top;
+		this.hullDirtyMouse = true;
 		this.scheduleHullDraw();
 	}
 
@@ -457,13 +492,17 @@ export class CosmographViewer {
 		this.mouseX = -1;
 		this.mouseY = -1;
 		this.hoveredHullIdx = -1;
+		this.hullDirtyMouse = false;
 		this.scheduleHullDraw();
 	}
 
-	private handleHullClick(): void {
+	private handleHullClick(event: MouseEvent): void {
 		if (this.hoveredHullIdx >= 0 && this.options.onHullClick) {
 			const hull = this.hyperedges[this.hoveredHullIdx];
-			if (hull) this.options.onHullClick(hull);
+			if (hull) {
+				event.stopPropagation();
+				this.options.onHullClick(hull);
+			}
 		}
 	}
 
