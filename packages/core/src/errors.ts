@@ -21,11 +21,27 @@ export class HyperMemoryError extends Error {
 	}
 }
 
-/** 401 or 403 — invalid or expired API key. */
+/** 400 — malformed request. */
+export class BadRequestError extends HyperMemoryError {
+	constructor(message: string, body?: string) {
+		super(message, 400, "bad_request", body);
+		this.name = "BadRequestError";
+	}
+}
+
+/** 401 — invalid or expired API key. */
 export class AuthenticationError extends HyperMemoryError {
-	constructor(message: string, status: number, body?: string) {
+	constructor(message: string, status = 401, body?: string) {
 		super(message, status, "authentication_error", body);
 		this.name = "AuthenticationError";
+	}
+}
+
+/** 403 — insufficient permissions for this resource or action. */
+export class ForbiddenError extends HyperMemoryError {
+	constructor(message: string, body?: string) {
+		super(message, 403, "forbidden", body);
+		this.name = "ForbiddenError";
 	}
 }
 
@@ -46,13 +62,7 @@ export class RateLimitError extends HyperMemoryError {
 	/** Window size in seconds */
 	readonly windowSeconds: number;
 
-	constructor(
-		message: string,
-		retryAfter: number,
-		limit: number = 0,
-		windowSeconds: number = 60,
-		body?: string,
-	) {
+	constructor(message: string, retryAfter: number, limit = 0, windowSeconds = 60, body?: string) {
 		super(message, 429, "rate_limit_exceeded", body);
 		this.name = "RateLimitError";
 		this.retryAfter = retryAfter;
@@ -71,7 +81,7 @@ export class ValidationError extends HyperMemoryError {
 
 /** 500+ — unexpected server-side error. */
 export class ServerError extends HyperMemoryError {
-	constructor(message: string, status: number = 500, body?: string) {
+	constructor(message: string, status = 500, body?: string) {
 		super(message, status, "server_error", body);
 		this.name = "ServerError";
 	}

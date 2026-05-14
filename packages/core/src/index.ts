@@ -8,10 +8,13 @@
  */
 
 export { HyperMemoryClient } from "./client.js";
+export type { MethodOptions } from "./client.js";
 export { HttpClient } from "./http.js";
 export type { HttpClientOptions, RequestOptions } from "./http.js";
 export {
 	AuthenticationError,
+	BadRequestError,
+	ForbiddenError,
 	HyperMemoryError,
 	NetworkError,
 	NotFoundError,

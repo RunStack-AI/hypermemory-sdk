@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
+	AuthenticationError,
 	HyperMemoryClient,
 	HyperMemoryError,
-	AuthenticationError,
-	NotFoundError,
-	RateLimitError,
-	ValidationError,
-	ServerError,
 	NetworkError,
-	TimeoutError,
+	NotFoundError,
 	PlanLimitError,
+	RateLimitError,
+	ServerError,
+	TimeoutError,
+	ValidationError,
 } from "../packages/core/src/index.js";
 
 describe("HyperMemoryClient", () => {

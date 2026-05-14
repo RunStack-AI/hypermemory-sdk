@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * React component wrapping the CosmographViewer for 2D graph visualization.
  *
@@ -14,9 +16,9 @@
  * ```
  */
 
-import { useEffect, useRef, type CSSProperties } from "react";
 import { CosmographViewer, type CosmographViewerOptions } from "@hypermemory/visualizer-core";
-import type { GraphNode, GraphLink, HyperedgeHull } from "@hypermemory/visualizer-core";
+import type { GraphLink, GraphNode, HyperedgeHull } from "@hypermemory/visualizer-core";
+import { type CSSProperties, useEffect, useRef } from "react";
 import { useHyperMemory } from "./useHyperMemory.js";
 
 export interface HyperMemoryGraph2DProps {
@@ -65,7 +67,12 @@ export function HyperMemoryGraph2D({
 }: HyperMemoryGraph2DProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const viewerRef = useRef<CosmographViewer | null>(null);
+	const onNodeClickRef = useRef(onNodeClick);
+	const onHullClickRef = useRef(onHullClick);
 	const client = useHyperMemory();
+
+	onNodeClickRef.current = onNodeClick;
+	onHullClickRef.current = onHullClick;
 
 	useEffect(() => {
 		if (!containerRef.current) return;
@@ -76,8 +83,8 @@ export function HyperMemoryGraph2D({
 			showDocs,
 			nodeColors,
 			backgroundColor,
-			onNodeClick,
-			onHullClick,
+			onNodeClick: (node) => onNodeClickRef.current?.(node),
+			onHullClick: (hull) => onHullClickRef.current?.(hull),
 		};
 
 		const viewer = new CosmographViewer(containerRef.current, options);
@@ -96,19 +103,18 @@ export function HyperMemoryGraph2D({
 			viewer.destroy();
 			viewerRef.current = null;
 		};
-	}, [graphId, propNodes, propLinks, propHyperedges, nodeColors, backgroundColor, client]);
-
-	useEffect(() => {
-		viewerRef.current?.toggleHyperedges(showHyperedges);
-	}, [showHyperedges]);
-
-	useEffect(() => {
-		viewerRef.current?.toggleOrphans(showOrphans);
-	}, [showOrphans]);
-
-	useEffect(() => {
-		viewerRef.current?.toggleDocs(showDocs);
-	}, [showDocs]);
+	}, [
+		graphId,
+		propNodes,
+		propLinks,
+		propHyperedges,
+		nodeColors,
+		backgroundColor,
+		showHyperedges,
+		showOrphans,
+		showDocs,
+		client,
+	]);
 
 	return <div ref={containerRef} className={className} style={style} />;
 }

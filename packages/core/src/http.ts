@@ -5,6 +5,8 @@
 
 import {
 	AuthenticationError,
+	BadRequestError,
+	ForbiddenError,
 	HyperMemoryError,
 	NetworkError,
 	NotFoundError,
@@ -29,6 +31,7 @@ export interface RequestOptions {
 	path: string;
 	body?: unknown;
 	params?: Record<string, string>;
+	signal?: AbortSignal;
 }
 
 export class HttpClient {
@@ -61,10 +64,15 @@ export class HttpClient {
 
 			const start = Date.now();
 			let status = 0;
+			let reported = false;
 
 			try {
 				const controller = new AbortController();
 				const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+				const signal = options.signal
+					? this.combineSignals(options.signal, controller.signal)
+					: controller.signal;
 
 				const response = await fetch(url, {
 					method: options.method,
@@ -74,7 +82,7 @@ export class HttpClient {
 						Accept: "application/json",
 					},
 					body: options.body ? JSON.stringify(options.body) : undefined,
-					signal: controller.signal,
+					signal,
 				});
 
 				clearTimeout(timeoutId);
@@ -82,14 +90,13 @@ export class HttpClient {
 				this.parseRateLimitHeaders(response.headers);
 
 				if (response.ok) {
-					const data = (await response.json()) as T;
-					return data;
+					return (await response.json()) as T;
 				}
 
 				const errorBody = await response.text();
-				const error = this.createError(status, errorBody);
+				const error = this.createError(status, errorBody, response.headers);
 
-				if (this.isRetryable(status) && attempt < this.maxRetries) {
+				if (this.isRetryable(status, options.method) && attempt < this.maxRetries) {
 					lastError = error;
 					continue;
 				}
@@ -97,16 +104,21 @@ export class HttpClient {
 				throw error;
 			} catch (err) {
 				if (err instanceof HyperMemoryError) {
-					this.onRequest?.(options.method, url, status, Date.now() - start);
 					throw err;
 				}
 
 				if (err instanceof DOMException && err.name === "AbortError") {
+					if (options.signal?.aborted) {
+						reported = true;
+						this.onRequest?.(options.method, url, 0, Date.now() - start);
+						throw new NetworkError("Request was cancelled");
+					}
 					const timeoutErr = new TimeoutError(this.timeout);
 					if (attempt < this.maxRetries) {
 						lastError = timeoutErr;
 						continue;
 					}
+					reported = true;
 					this.onRequest?.(options.method, url, 0, Date.now() - start);
 					throw timeoutErr;
 				}
@@ -118,10 +130,11 @@ export class HttpClient {
 					lastError = networkErr;
 					continue;
 				}
+				reported = true;
 				this.onRequest?.(options.method, url, 0, Date.now() - start);
 				throw networkErr;
 			} finally {
-				if (status > 0) {
+				if (!reported) {
 					this.onRequest?.(options.method, url, status, Date.now() - start);
 				}
 			}
@@ -131,7 +144,8 @@ export class HttpClient {
 	}
 
 	private buildUrl(path: string, params?: Record<string, string>): string {
-		const url = new URL(path, this.baseUrl);
+		const normalizedPath = path.replace(/^\/?/, "/");
+		const url = new URL(normalizedPath, this.baseUrl);
 		if (params) {
 			for (const [key, value] of Object.entries(params)) {
 				url.searchParams.set(key, value);
@@ -154,7 +168,7 @@ export class HttpClient {
 		}
 	}
 
-	private createError(status: number, body: string): HyperMemoryError {
+	private createError(status: number, body: string, headers: Headers): HyperMemoryError {
 		let message = `HTTP ${status}`;
 		try {
 			const parsed = JSON.parse(body) as { detail?: string; message?: string; plan?: string };
@@ -169,15 +183,19 @@ export class HttpClient {
 		}
 
 		switch (status) {
+			case 400:
+				return new BadRequestError(message, body);
 			case 401:
-			case 403:
 				return new AuthenticationError(message, status, body);
+			case 403:
+				return new ForbiddenError(message, body);
 			case 404:
 				return new NotFoundError(message, body);
 			case 422:
 				return new ValidationError(message, body);
 			case 429: {
-				const retryAfter = this.parseRetryAfter(body);
+				const retryAfter =
+					this.parseRetryAfterFromHeader(headers) ?? this.parseRetryAfterFromBody(body);
 				return new RateLimitError(message, retryAfter, 0, 60, body);
 			}
 			default:
@@ -188,18 +206,34 @@ export class HttpClient {
 		}
 	}
 
-	private parseRetryAfter(body: string): number {
+	private parseRetryAfterFromHeader(headers: Headers): number | null {
+		const value = headers.get("Retry-After") ?? headers.get("retry-after");
+		if (!value) return null;
+		const seconds = Number.parseInt(value, 10);
+		if (!Number.isNaN(seconds) && seconds > 0) return seconds;
+		const date = Date.parse(value);
+		if (!Number.isNaN(date)) {
+			return Math.max(1, Math.ceil((date - Date.now()) / 1000));
+		}
+		return null;
+	}
+
+	private parseRetryAfterFromBody(body: string): number {
 		try {
 			const parsed = JSON.parse(body) as { retry_after?: number };
-			if (parsed.retry_after) return parsed.retry_after;
+			if (parsed.retry_after && parsed.retry_after > 0) return parsed.retry_after;
 		} catch {
 			// Fall through
 		}
 		return 60;
 	}
 
-	private isRetryable(status: number): boolean {
-		return status === 429 || status === 503 || status === 502 || status === 504;
+	private isRetryable(status: number, method: string): boolean {
+		if (status === 429) return true;
+		if (status === 502 || status === 503 || status === 504) {
+			return method === "GET" || method === "HEAD" || method === "DELETE";
+		}
+		return false;
 	}
 
 	private getBackoffDelay(attempt: number, lastError: Error | null): number {
@@ -209,6 +243,17 @@ export class HttpClient {
 		const base = Math.min(1000 * 2 ** (attempt - 1), 30000);
 		const jitter = Math.random() * 500;
 		return base + jitter;
+	}
+
+	private combineSignals(userSignal: AbortSignal, timeoutSignal: AbortSignal): AbortSignal {
+		if (typeof AbortSignal.any === "function") {
+			return AbortSignal.any([userSignal, timeoutSignal]);
+		}
+		const controller = new AbortController();
+		const onAbort = () => controller.abort();
+		userSignal.addEventListener("abort", onAbort, { once: true });
+		timeoutSignal.addEventListener("abort", onAbort, { once: true });
+		return controller.signal;
 	}
 
 	private sleep(ms: number): Promise<void> {

@@ -27,7 +27,10 @@ export function convexHull(points: Point[]): Point[] {
 
 	const lower: Point[] = [];
 	for (let i = 0; i < n; i++) {
-		while (lower.length >= 2 && cross(lower[lower.length - 2]!, lower[lower.length - 1]!, sorted[i]!) <= 0) {
+		while (
+			lower.length >= 2 &&
+			cross(lower[lower.length - 2]!, lower[lower.length - 1]!, sorted[i]!) <= 0
+		) {
 			lower.pop();
 		}
 		lower.push(sorted[i]!);
@@ -35,7 +38,10 @@ export function convexHull(points: Point[]): Point[] {
 
 	const upper: Point[] = [];
 	for (let i = n - 1; i >= 0; i--) {
-		while (upper.length >= 2 && cross(upper[upper.length - 2]!, upper[upper.length - 1]!, sorted[i]!) <= 0) {
+		while (
+			upper.length >= 2 &&
+			cross(upper[upper.length - 2]!, upper[upper.length - 1]!, sorted[i]!) <= 0
+		) {
 			upper.pop();
 		}
 		upper.push(sorted[i]!);
@@ -54,7 +60,7 @@ export function convexHull(points: Point[]): Point[] {
  * @param padding - Pixel padding to expand the hull (default: 30)
  * @returns SVG path data string (M...L...Z)
  */
-export function paddedHullPath(hullPoints: Point[], padding: number = 30): string {
+export function paddedHullPath(hullPoints: Point[], padding = 30): string {
 	if (hullPoints.length < 2) return "";
 
 	const cx = hullPoints.reduce((s, p) => s + p.x, 0) / hullPoints.length;

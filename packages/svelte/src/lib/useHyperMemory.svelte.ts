@@ -16,16 +16,16 @@
  * ```
  */
 
-import { getContext } from "svelte";
 import type { HyperMemoryClient } from "@hypermemory/core";
+import { getContext } from "svelte";
 
 export function useHyperMemory(): HyperMemoryClient {
-	const client = getContext<HyperMemoryClient>("hypermemory-client");
-	if (!client) {
+	const ctx = getContext<{ readonly client: HyperMemoryClient }>("hypermemory-client");
+	if (!ctx) {
 		throw new Error(
 			"useHyperMemory() must be used inside a <HyperMemoryProvider>. " +
-				"Wrap your component tree with <HyperMemoryProvider apiKey=\"hm_...\">.",
+				'Wrap your component tree with <HyperMemoryProvider apiKey="hm_...">.',
 		);
 	}
-	return client;
+	return ctx.client;
 }

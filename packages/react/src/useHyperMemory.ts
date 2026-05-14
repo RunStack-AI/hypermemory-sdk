@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * React hook for accessing the HyperMemory client from context.
  *
@@ -20,8 +22,8 @@
  * ```
  */
 
-import { useContext } from "react";
 import type { HyperMemoryClient } from "@hypermemory/core";
+import { useContext } from "react";
 import { HyperMemoryContext } from "./context.js";
 
 export function useHyperMemory(): HyperMemoryClient {

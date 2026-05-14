@@ -280,12 +280,6 @@ pnpm typecheck      # Verify types across all packages
 pnpm lint           # Lint with biome
 ```
 
-## Examples
-
-- [`examples/vanilla/`](./examples/vanilla) — Plain HTML + TypeScript
-- [`examples/svelte-app/`](./examples/svelte-app) — SvelteKit integration
-- [`examples/react-app/`](./examples/react-app) — React + Vite integration
-
 ## License
 
 MIT — see [LICENSE](./LICENSE) for details.

@@ -48,6 +48,7 @@ export class ForceGraph3DViewer {
 	private selectedNodeId: string | null = null;
 	private neighborSet: Set<string> = new Set();
 	private destroyed = false;
+	private addedElements: Element[] = [];
 
 	constructor(container: HTMLElement, options: ForceGraph3DOptions = {}) {
 		this.container = container;
@@ -141,7 +142,12 @@ export class ForceGraph3DViewer {
 				instance._destructor();
 			}
 		}
-		this.container.innerHTML = "";
+		for (const el of this.addedElements) {
+			el.remove();
+		}
+		this.addedElements = [];
+		const renderer = this.container.querySelector("canvas");
+		if (renderer) renderer.remove();
 		this.graphInstance = null;
 	}
 
@@ -169,17 +175,19 @@ export class ForceGraph3DViewer {
 			.map((l) => ({ source: l.source, target: l.target, label: l.relationship }));
 
 		try {
-			// Dynamic import — 3d-force-graph is an optional peer dependency
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const ForceGraph3DModule = await import("3d-force-graph") as any;
+			const ForceGraph3DModule = (await import("3d-force-graph")) as any;
 			const ForceGraph3D = ForceGraph3DModule.default;
 
 			if (this.graphInstance) {
 				(this.graphInstance as { _destructor?: () => void })._destructor?.();
-				this.container.innerHTML = "";
+				const canvas = this.container.querySelector("canvas");
+				if (canvas) canvas.remove();
 			}
 
 			const bgColor = this.options.backgroundColor ?? DEFAULT_3D_CONFIG.backgroundColor;
+			const chargeStrength = this.options.chargeStrength ?? DEFAULT_3D_CONFIG.chargeStrength;
+			const linkDistance = this.options.linkDistance ?? DEFAULT_3D_CONFIG.linkDistance;
 
 			const graph = new ForceGraph3D(this.container)
 				.graphData({ nodes: internalNodes, links: internalLinks })
@@ -209,6 +217,9 @@ export class ForceGraph3DViewer {
 					}
 					this.selectNode(n.id);
 				});
+
+			graph.d3Force("charge")?.strength(chargeStrength);
+			graph.d3Force("link")?.distance(linkDistance);
 
 			this.graphInstance = graph;
 		} catch {
@@ -242,14 +253,19 @@ export class ForceGraph3DViewer {
 	private flyToNode(nodeId: string): void {
 		if (!this.graphInstance) return;
 		const instance = this.graphInstance as {
-			cameraPosition?: (pos: { x: number; y: number; z: number }, lookAt?: unknown, transitionMs?: number) => void;
+			cameraPosition?: (
+				pos: { x: number; y: number; z: number },
+				lookAt?: unknown,
+				transitionMs?: number,
+			) => void;
 			graphData?: () => { nodes: Internal3DNode[] };
 		};
-		if (typeof instance.cameraPosition !== "function" || typeof instance.graphData !== "function") return;
+		if (typeof instance.cameraPosition !== "function" || typeof instance.graphData !== "function")
+			return;
 
 		const data = instance.graphData();
 		const node = data.nodes.find((n) => n.id === nodeId);
-		if (!node?.x || !node.y || !node.z) return;
+		if (!node || node.x == null || node.y == null || node.z == null) return;
 
 		const distance = 120;
 		instance.cameraPosition(
@@ -261,8 +277,9 @@ export class ForceGraph3DViewer {
 
 	private updateHighlights(): void {
 		if (!this.graphInstance) return;
-		// Trigger a re-render by updating node colors (force-graph watches for changes)
-		const instance = this.graphInstance as { nodeColor?: (fn: (node: Internal3DNode) => string) => unknown };
+		const instance = this.graphInstance as {
+			nodeColor?: (fn: (node: Internal3DNode) => string) => unknown;
+		};
 		if (typeof instance.nodeColor === "function") {
 			instance.nodeColor((node: Internal3DNode) => {
 				if (!this.selectedNodeId) return node.color;
@@ -279,5 +296,6 @@ export class ForceGraph3DViewer {
 			"display:flex;align-items:center;justify-content:center;height:100%;color:#888;font-family:sans-serif;";
 		msg.textContent = "Install 3d-force-graph and three to enable 3D graph visualization";
 		this.container.appendChild(msg);
+		this.addedElements.push(msg);
 	}
 }

@@ -2,7 +2,7 @@
  * CosmographViewer — GPU-accelerated 2D graph visualization using Cosmograph.
  *
  * Mounts to any DOM element and renders an interactive hypergraph
- * with force-directed layout, hyperedge hull rendering, and node filtering.
+ * with force-directed layout and node filtering.
  *
  * @example
  * ```typescript
@@ -20,15 +20,12 @@
 import { getNodeColor } from "../shared/colors.js";
 import type { GraphLink, GraphNode, HyperedgeHull } from "../shared/types.js";
 import { type CosmographViewerOptions, DEFAULT_SIMULATION } from "./config.js";
-import { convexHull, paddedHullPath } from "./hull.js";
 
 interface InternalNode {
 	id: string;
 	label: string;
 	type: string;
 	color: string;
-	x?: number;
-	y?: number;
 }
 
 interface InternalLink {
@@ -41,19 +38,18 @@ export class CosmographViewer {
 	private container: HTMLElement;
 	private options: CosmographViewerOptions;
 	private cosmographInstance: unknown = null;
-	private canvas: HTMLCanvasElement | null = null;
 	private nodes: GraphNode[] = [];
 	private links: GraphLink[] = [];
-	private hyperedges: HyperedgeHull[] = [];
-	private showHyperedges: boolean;
+	private currentInternalNodes: InternalNode[] = [];
 	private showOrphans: boolean;
 	private showDocs: boolean;
 	private destroyed = false;
+	private renderSeq = 0;
+	private addedElements: Element[] = [];
 
 	constructor(container: HTMLElement, options: CosmographViewerOptions = {}) {
 		this.container = container;
 		this.options = options;
-		this.showHyperedges = options.showHyperedges ?? false;
 		this.showOrphans = options.showOrphans ?? true;
 		this.showDocs = options.showDocs ?? true;
 	}
@@ -65,11 +61,15 @@ export class CosmographViewer {
 	 * @param links - Graph edges
 	 * @param hyperedges - Optional hyperedge hull definitions
 	 */
-	async setData(nodes: GraphNode[], links: GraphLink[], hyperedges: HyperedgeHull[] = []): Promise<void> {
+	async setData(
+		nodes: GraphNode[],
+		links: GraphLink[],
+		_hyperedges?: HyperedgeHull[],
+	): Promise<void> {
 		this.nodes = nodes;
 		this.links = links;
-		this.hyperedges = hyperedges;
-		await this.render();
+		const seq = ++this.renderSeq;
+		await this.render(seq);
 	}
 
 	/**
@@ -101,43 +101,44 @@ export class CosmographViewer {
 		this.highlightNodes(null);
 	}
 
-	/** Toggle hyperedge hull rendering. */
-	toggleHyperedges(show: boolean): void {
-		this.showHyperedges = show;
-		this.renderHulls();
+	/** Toggle hyperedge hull rendering (v0.2 — currently a no-op, hulls require frame-synced canvas). */
+	toggleHyperedges(_show: boolean): void {
+		// Hull rendering requires frame-synced canvas overlay — planned for v0.2
 	}
 
 	/** Toggle orphan node visibility. */
 	toggleOrphans(show: boolean): void {
 		this.showOrphans = show;
-		this.render();
+		const seq = ++this.renderSeq;
+		this.render(seq);
 	}
 
 	/** Toggle document-type node visibility. */
 	toggleDocs(show: boolean): void {
 		this.showDocs = show;
-		this.render();
+		const seq = ++this.renderSeq;
+		this.render(seq);
 	}
 
 	/** Fit the graph to fill the viewport. */
 	fitView(): void {
-		if (this.cosmographInstance && typeof (this.cosmographInstance as { fitView?: () => void }).fitView === "function") {
-			(this.cosmographInstance as { fitView: () => void }).fitView();
-		}
+		if (!this.cosmographInstance) return;
+		const instance = this.cosmographInstance as { fitView?: () => void };
+		instance.fitView?.();
 	}
 
 	/** Pause the simulation. */
 	pause(): void {
-		if (this.cosmographInstance && typeof (this.cosmographInstance as { pause?: () => void }).pause === "function") {
-			(this.cosmographInstance as { pause: () => void }).pause();
-		}
+		if (!this.cosmographInstance) return;
+		const instance = this.cosmographInstance as { pause?: () => void };
+		instance.pause?.();
 	}
 
 	/** Resume the simulation. */
 	resume(): void {
-		if (this.cosmographInstance && typeof (this.cosmographInstance as { restart?: () => void }).restart === "function") {
-			(this.cosmographInstance as { restart: () => void }).restart();
-		}
+		if (!this.cosmographInstance) return;
+		const instance = this.cosmographInstance as { start?: () => void };
+		instance.start?.();
 	}
 
 	/** Register a node click callback. */
@@ -153,25 +154,21 @@ export class CosmographViewer {
 	/** Destroy the viewer and free resources. */
 	destroy(): void {
 		this.destroyed = true;
-		if (this.cosmographInstance && typeof (this.cosmographInstance as { destroy?: () => void }).destroy === "function") {
-			(this.cosmographInstance as { destroy: () => void }).destroy();
+		if (this.cosmographInstance) {
+			const instance = this.cosmographInstance as { destroy?: () => void };
+			instance.destroy?.();
 		}
-		if (this.canvas) {
-			this.canvas.remove();
-			this.canvas = null;
+		for (const el of this.addedElements) {
+			el.remove();
 		}
+		this.addedElements = [];
 		this.cosmographInstance = null;
 	}
 
-	private async render(): Promise<void> {
+	private async render(seq: number): Promise<void> {
 		if (this.destroyed) return;
 
 		const filteredNodes = this.getFilteredNodes();
-		const connectedNodeIds = new Set<string>();
-		for (const link of this.links) {
-			connectedNodeIds.add(link.source);
-			connectedNodeIds.add(link.target);
-		}
 
 		const internalNodes: InternalNode[] = filteredNodes.map((n) => ({
 			id: n.node_key,
@@ -180,16 +177,19 @@ export class CosmographViewer {
 			color: getNodeColor(n.node_type, this.options.nodeColors),
 		}));
 
+		this.currentInternalNodes = internalNodes;
+
 		const nodeIdSet = new Set(internalNodes.map((n) => n.id));
 		const internalLinks: InternalLink[] = this.links
 			.filter((l) => nodeIdSet.has(l.source) && nodeIdSet.has(l.target))
 			.map((l) => ({ source: l.source, target: l.target, label: l.relationship }));
 
 		try {
-			// Dynamic import — Cosmograph is an optional peer dependency
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const cosmographModule = await import("@cosmograph/cosmograph") as any;
+			const cosmographModule = (await import("@cosmograph/cosmograph")) as any;
 			const Cosmograph = cosmographModule.Cosmograph;
+
+			if (seq !== this.renderSeq) return;
 
 			if (this.cosmographInstance) {
 				(this.cosmographInstance as { destroy: () => void }).destroy();
@@ -197,7 +197,6 @@ export class CosmographViewer {
 
 			const sim = { ...DEFAULT_SIMULATION, ...this.options.simulation };
 
-			// Cosmograph v2 uses columnar config with data passed as Record<string,unknown>[]
 			const config = {
 				points: internalNodes as unknown as Record<string, unknown>[],
 				pointId: "id",
@@ -218,18 +217,19 @@ export class CosmographViewer {
 				simulationLinkDistance: sim.springLength,
 				onClick: (index: number | undefined) => {
 					if (index !== undefined && this.options.onNodeClick) {
-						const original = this.nodes[index];
-						if (original) this.options.onNodeClick(original);
+						const internalNode = this.currentInternalNodes[index];
+						if (internalNode) {
+							const original = this.nodes.find((n) => n.node_key === internalNode.id);
+							if (original) this.options.onNodeClick(original);
+						}
 					}
 				},
 			};
 
 			this.cosmographInstance = new Cosmograph(this.container, config);
 		} catch {
-			this.renderFallback(internalNodes, internalLinks);
+			this.renderFallback();
 		}
-
-		this.renderHulls();
 	}
 
 	private getFilteredNodes(): GraphNode[] {
@@ -246,62 +246,25 @@ export class CosmographViewer {
 		});
 	}
 
-	private renderHulls(): void {
-		const existingOverlay = this.container.querySelector(".hm-hull-overlay");
-		if (existingOverlay) existingOverlay.remove();
-
-		if (!this.showHyperedges || this.hyperedges.length === 0) return;
-
-		const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-		svg.classList.add("hm-hull-overlay");
-		svg.style.position = "absolute";
-		svg.style.top = "0";
-		svg.style.left = "0";
-		svg.style.width = "100%";
-		svg.style.height = "100%";
-		svg.style.pointerEvents = "none";
-		svg.style.zIndex = "1";
-
-		for (const hull of this.hyperedges) {
-			const memberNodes = this.nodes.filter((n) => hull.members.includes(n.node_key));
-			if (memberNodes.length < 2) continue;
-
-			const points = memberNodes
-				.filter((n) => n.x !== undefined && n.y !== undefined)
-				.map((n) => ({ x: n.x!, y: n.y! }));
-
-			if (points.length < 2) continue;
-
-			const hullPoints = convexHull(points);
-			const pathData = paddedHullPath(hullPoints, 30);
-
-			const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-			path.setAttribute("d", pathData);
-			path.setAttribute("fill", (hull.color ?? "#ffffff") + "15");
-			path.setAttribute("stroke", hull.color ?? "#ffffff40");
-			path.setAttribute("stroke-width", "1.5");
-			svg.appendChild(path);
-		}
-
-		this.container.appendChild(svg);
-	}
-
 	private highlightNodes(nodeIds: string[] | null): void {
-		// Highlighting is handled by Cosmograph's built-in selection API
 		if (!this.cosmographInstance) return;
 		const instance = this.cosmographInstance as {
-			selectNodes?: (ids: string[] | null) => void;
+			selectPointsByIds?: (ids: string[]) => void;
+			unselectAllPoints?: () => void;
 		};
-		if (typeof instance.selectNodes === "function") {
-			instance.selectNodes(nodeIds);
+		if (nodeIds === null || nodeIds.length === 0) {
+			instance.unselectAllPoints?.();
+		} else {
+			instance.selectPointsByIds?.(nodeIds);
 		}
 	}
 
-	private renderFallback(_nodes: InternalNode[], _links: InternalLink[]): void {
+	private renderFallback(): void {
 		const msg = document.createElement("div");
 		msg.style.cssText =
 			"display:flex;align-items:center;justify-content:center;height:100%;color:#888;font-family:sans-serif;";
 		msg.textContent = "Install @cosmograph/cosmograph to enable 2D graph visualization";
 		this.container.appendChild(msg);
+		this.addedElements.push(msg);
 	}
 }

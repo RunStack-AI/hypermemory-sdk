@@ -1,48 +1,48 @@
 {
-  "name": "@hypermemory/visualizer-core",
-  "version": "0.1.0",
-  "description": "HyperMemory graph visualization — Cosmograph 2D and 3D Force Graph viewers",
-  "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
-      "require": {
-        "types": "./dist/index.d.cts",
-        "default": "./dist/index.cjs"
-      }
-    }
-  },
-  "files": ["dist"],
-  "engines": { "node": ">=18.0.0" },
-  "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
-    "typecheck": "tsc --noEmit"
-  },
-  "peerDependencies": {
-    "@cosmograph/cosmograph": ">=2.0.0",
-    "3d-force-graph": ">=1.70.0",
-    "three": ">=0.150.0"
-  },
-  "peerDependenciesMeta": {
-    "@cosmograph/cosmograph": { "optional": true },
-    "3d-force-graph": { "optional": true },
-    "three": { "optional": true }
-  },
-  "devDependencies": {
-    "@cosmograph/cosmograph": "^2.2.0",
-    "3d-force-graph": "^1.80.0",
-    "three": "^0.184.0",
-    "@types/three": "^0.184.0",
-    "tsup": "^8.3.0",
-    "typescript": "^5.6.0"
-  },
-  "keywords": ["hypermemory", "graph", "visualization", "cosmograph", "3d", "three.js"],
-  "license": "MIT"
+	"name": "@hypermemory/visualizer-core",
+	"version": "0.1.0",
+	"description": "HyperMemory graph visualization — Cosmograph 2D and 3D Force Graph viewers",
+	"type": "module",
+	"main": "./dist/index.cjs",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": {
+				"types": "./dist/index.d.ts",
+				"default": "./dist/index.js"
+			},
+			"require": {
+				"types": "./dist/index.d.cts",
+				"default": "./dist/index.cjs"
+			}
+		}
+	},
+	"files": ["dist"],
+	"engines": { "node": ">=18.0.0" },
+	"scripts": {
+		"build": "tsup",
+		"dev": "tsup --watch",
+		"typecheck": "tsc --noEmit"
+	},
+	"peerDependencies": {
+		"@cosmograph/cosmograph": ">=2.0.0",
+		"3d-force-graph": ">=1.70.0",
+		"three": ">=0.150.0"
+	},
+	"peerDependenciesMeta": {
+		"@cosmograph/cosmograph": { "optional": true },
+		"3d-force-graph": { "optional": true },
+		"three": { "optional": true }
+	},
+	"devDependencies": {
+		"@cosmograph/cosmograph": "^2.2.0",
+		"3d-force-graph": "^1.80.0",
+		"three": "^0.184.0",
+		"@types/three": "^0.184.0",
+		"tsup": "^8.3.0",
+		"typescript": "^5.6.0"
+	},
+	"keywords": ["hypermemory", "graph", "visualization", "cosmograph", "3d", "three.js"],
+	"license": "MIT"
 }

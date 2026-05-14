@@ -4,7 +4,7 @@
  * Framework-agnostic graph visualization for HyperMemory hypergraphs.
  * Provides two viewer classes that mount to any DOM element:
  *
- * - **CosmographViewer** — GPU-accelerated 2D visualization with hyperedge hulls
+ * - **CosmographViewer** — GPU-accelerated 2D visualization
  * - **ForceGraph3DViewer** — Three.js 3D visualization with camera fly-to
  *
  * @packageDocumentation

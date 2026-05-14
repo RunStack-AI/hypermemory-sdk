@@ -37,6 +37,12 @@ import type {
 	UpdateResponse,
 } from "./types.js";
 
+/** Options that can be passed to any client method for per-request control. */
+export interface MethodOptions {
+	/** AbortSignal for cancellation */
+	signal?: AbortSignal;
+}
+
 const DEFAULT_BASE_URL = "https://api.hypermemory.io";
 const DEFAULT_MAX_RETRIES = 3;
 const DEFAULT_TIMEOUT = 30_000;
@@ -79,11 +85,12 @@ export class HyperMemoryClient {
 	 * });
 	 * ```
 	 */
-	async store(request: StoreRequest): Promise<StoreResponse> {
+	async store(request: StoreRequest, options?: MethodOptions): Promise<StoreResponse> {
 		return this.http.request<StoreResponse>({
 			method: "POST",
 			path: "/api/v1/memory/store",
 			body: request,
+			signal: options?.signal,
 		});
 	}
 
@@ -104,11 +111,12 @@ export class HyperMemoryClient {
 	 * }
 	 * ```
 	 */
-	async recall(request: RecallRequest): Promise<RecallResponse> {
+	async recall(request: RecallRequest, options?: MethodOptions): Promise<RecallResponse> {
 		return this.http.request<RecallResponse>({
 			method: "POST",
 			path: "/api/v1/memory/recall",
 			body: request,
+			signal: options?.signal,
 		});
 	}
 
@@ -127,11 +135,12 @@ export class HyperMemoryClient {
 	 * await hm.update({ key: "person_jane", description: "Jane Doe — CTO at Acme Corp" });
 	 * ```
 	 */
-	async update(request: UpdateRequest): Promise<UpdateResponse> {
+	async update(request: UpdateRequest, options?: MethodOptions): Promise<UpdateResponse> {
 		return this.http.request<UpdateResponse>({
 			method: "POST",
 			path: "/api/v1/memory/update",
 			body: request,
+			signal: options?.signal,
 		});
 	}
 
@@ -151,11 +160,12 @@ export class HyperMemoryClient {
 	 * await hm.forget("person_old_contact", true); // cascade delete
 	 * ```
 	 */
-	async forget(key: string, cascade: boolean = false): Promise<ForgetResponse> {
+	async forget(key: string, cascade = false, options?: MethodOptions): Promise<ForgetResponse> {
 		return this.http.request<ForgetResponse>({
 			method: "POST",
 			path: "/api/v1/memory/forget",
 			body: { key, cascade },
+			signal: options?.signal,
 		});
 	}
 
@@ -172,10 +182,11 @@ export class HyperMemoryClient {
 	 * console.log(`${overview.nodes} nodes, ${overview.edges} edges`);
 	 * ```
 	 */
-	async overview(): Promise<OverviewResponse> {
+	async overview(options?: MethodOptions): Promise<OverviewResponse> {
 		return this.http.request<OverviewResponse>({
 			method: "GET",
 			path: "/api/v1/memory/overview",
+			signal: options?.signal,
 		});
 	}
 
@@ -199,11 +210,12 @@ export class HyperMemoryClient {
 	 * console.log(`Created ${result.nodes_created} nodes, ${result.edges_created} edges`);
 	 * ```
 	 */
-	async ingest(request: IngestRequest): Promise<IngestResponse> {
+	async ingest(request: IngestRequest, options?: MethodOptions): Promise<IngestResponse> {
 		return this.http.request<IngestResponse>({
 			method: "POST",
 			path: "/api/v1/memory/ingest",
 			body: request,
+			signal: options?.signal,
 		});
 	}
 
@@ -225,13 +237,18 @@ export class HyperMemoryClient {
 	 * }
 	 * ```
 	 */
-	async getRelationships(key: string, pattern?: string): Promise<NodeRelationship[]> {
+	async getRelationships(
+		key: string,
+		pattern?: string,
+		options?: MethodOptions,
+	): Promise<NodeRelationship[]> {
 		const params: Record<string, string> = {};
 		if (pattern) params.pattern = pattern;
 		return this.http.request<NodeRelationship[]>({
 			method: "GET",
 			path: `/api/v1/memory/relationships/${encodeURIComponent(key)}`,
 			params,
+			signal: options?.signal,
 		});
 	}
 
@@ -254,11 +271,15 @@ export class HyperMemoryClient {
 	 * });
 	 * ```
 	 */
-	async addRelationships(request: AddRelationshipsRequest): Promise<{ created: number }> {
+	async addRelationships(
+		request: AddRelationshipsRequest,
+		options?: MethodOptions,
+	): Promise<{ created: number }> {
 		return this.http.request<{ created: number }>({
 			method: "POST",
 			path: "/api/v1/memory/relationships",
 			body: request,
+			signal: options?.signal,
 		});
 	}
 
@@ -280,11 +301,12 @@ export class HyperMemoryClient {
 	 * });
 	 * ```
 	 */
-	async findRelated(request: FindRelatedRequest): Promise<RecallResponse> {
+	async findRelated(request: FindRelatedRequest, options?: MethodOptions): Promise<RecallResponse> {
 		return this.http.request<RecallResponse>({
 			method: "POST",
 			path: "/api/v1/memory/find-related",
 			body: request,
+			signal: options?.signal,
 		});
 	}
 
@@ -302,11 +324,15 @@ export class HyperMemoryClient {
 	 * await hm.timelineWrite({ summary: "User completed onboarding", meta: { step: 5 } });
 	 * ```
 	 */
-	async timelineWrite(request: TimelineWriteRequest): Promise<TimelineWriteResponse> {
+	async timelineWrite(
+		request: TimelineWriteRequest,
+		options?: MethodOptions,
+	): Promise<TimelineWriteResponse> {
 		return this.http.request<TimelineWriteResponse>({
 			method: "POST",
 			path: "/api/v1/memory/timeline/write",
 			body: request,
+			signal: options?.signal,
 		});
 	}
 
@@ -326,11 +352,15 @@ export class HyperMemoryClient {
 	 * }
 	 * ```
 	 */
-	async timelineRead(request: TimelineReadRequest = {}): Promise<TimelineReadResponse> {
+	async timelineRead(
+		request: TimelineReadRequest = {},
+		options?: MethodOptions,
+	): Promise<TimelineReadResponse> {
 		return this.http.request<TimelineReadResponse>({
 			method: "POST",
 			path: "/api/v1/memory/timeline",
 			body: request,
+			signal: options?.signal,
 		});
 	}
 
@@ -347,14 +377,18 @@ export class HyperMemoryClient {
 	 * const data = await hm.exportGraph({ format: "json", include_data: true });
 	 * ```
 	 */
-	async exportGraph(options?: ExportOptions): Promise<PublicGraphResponse> {
+	async exportGraph(
+		exportOptions?: ExportOptions,
+		options?: MethodOptions,
+	): Promise<PublicGraphResponse> {
 		const params: Record<string, string> = {};
-		if (options?.format) params.format = options.format;
-		if (options?.include_data) params.include_data = "true";
+		if (exportOptions?.format) params.format = exportOptions.format;
+		if (exportOptions?.include_data) params.include_data = "true";
 		return this.http.request<PublicGraphResponse>({
 			method: "GET",
 			path: "/api/v1/memory/export",
 			params,
+			signal: options?.signal,
 		});
 	}
 
@@ -372,10 +406,11 @@ export class HyperMemoryClient {
 	 * console.log(`${graph.nodes.length} nodes, ${graph.links.length} links`);
 	 * ```
 	 */
-	async getPublicGraph(graphId: string): Promise<PublicGraphResponse> {
+	async getPublicGraph(graphId: string, options?: MethodOptions): Promise<PublicGraphResponse> {
 		return this.http.request<PublicGraphResponse>({
 			method: "GET",
 			path: `/api/graphs/${encodeURIComponent(graphId)}/public`,
+			signal: options?.signal,
 		});
 	}
 

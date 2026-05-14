@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * React component wrapping the ForceGraph3DViewer for 3D graph visualization.
  *
@@ -13,9 +15,9 @@
  * ```
  */
 
-import { useEffect, useRef, type CSSProperties } from "react";
-import { ForceGraph3DViewer, type ForceGraph3DOptions } from "@hypermemory/visualizer-core";
-import type { GraphNode, GraphLink } from "@hypermemory/visualizer-core";
+import { type ForceGraph3DOptions, ForceGraph3DViewer } from "@hypermemory/visualizer-core";
+import type { GraphLink, GraphNode } from "@hypermemory/visualizer-core";
+import { type CSSProperties, useEffect, useRef } from "react";
 import { useHyperMemory } from "./useHyperMemory.js";
 
 export interface HyperMemoryGraph3DProps {
@@ -55,7 +57,10 @@ export function HyperMemoryGraph3D({
 }: HyperMemoryGraph3DProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const viewerRef = useRef<ForceGraph3DViewer | null>(null);
+	const onNodeClickRef = useRef(onNodeClick);
 	const client = useHyperMemory();
+
+	onNodeClickRef.current = onNodeClick;
 
 	useEffect(() => {
 		if (!containerRef.current) return;
@@ -65,7 +70,7 @@ export function HyperMemoryGraph3D({
 			showDocs,
 			nodeColors,
 			backgroundColor,
-			onNodeClick,
+			onNodeClick: (node) => onNodeClickRef.current?.(node),
 		};
 
 		const viewer = new ForceGraph3DViewer(containerRef.current, options);
@@ -84,7 +89,7 @@ export function HyperMemoryGraph3D({
 			viewer.destroy();
 			viewerRef.current = null;
 		};
-	}, [graphId, propNodes, propLinks, nodeColors, backgroundColor, client]);
+	}, [graphId, propNodes, propLinks, nodeColors, backgroundColor, showOrphans, showDocs, client]);
 
 	return <div ref={containerRef} className={className} style={style} />;
 }

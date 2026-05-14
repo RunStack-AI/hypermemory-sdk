@@ -1,20 +1,36 @@
 import { describe, expect, it } from "vitest";
 import {
-	NODE_COLORS,
-	getNodeColor,
-	convexHull,
-	paddedHullPath,
-	DEFAULT_SIMULATION,
 	DEFAULT_3D_CONFIG,
+	DEFAULT_SIMULATION,
+	NODE_COLORS,
+	convexHull,
+	getNodeColor,
+	paddedHullPath,
 } from "../packages/visualizer-core/src/index.js";
 
 describe("Node colors", () => {
 	it("has colors for all 20 axiom types", () => {
 		const expectedTypes = [
-			"person", "organization", "technology", "concept", "event",
-			"decision", "artifact", "project", "skill", "preference",
-			"fact", "component", "location", "user", "document",
-			"process", "metric", "goal", "risk", "default",
+			"person",
+			"organization",
+			"technology",
+			"concept",
+			"event",
+			"decision",
+			"artifact",
+			"project",
+			"skill",
+			"preference",
+			"fact",
+			"component",
+			"location",
+			"user",
+			"document",
+			"process",
+			"metric",
+			"goal",
+			"risk",
+			"default",
 		];
 		for (const type of expectedTypes) {
 			expect(NODE_COLORS[type]).toBeDefined();

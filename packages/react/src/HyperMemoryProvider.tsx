@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * React Context provider that initializes and provides the HyperMemory client
  * to all child components.
@@ -16,8 +18,8 @@
  * ```
  */
 
-import { useMemo, type ReactNode } from "react";
 import { HyperMemoryClient } from "@hypermemory/core";
+import { type ReactNode, useMemo } from "react";
 import { HyperMemoryContext } from "./context.js";
 
 export interface HyperMemoryProviderProps {
