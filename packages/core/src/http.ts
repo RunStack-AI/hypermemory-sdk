@@ -34,6 +34,11 @@ export interface RequestOptions {
 	signal?: AbortSignal;
 }
 
+type AttemptResult<T> =
+	| { type: "success"; data: T }
+	| { type: "retry"; error: Error; status: number }
+	| { type: "fatal"; error: Error; status: number };
+
 export class HttpClient {
 	private readonly baseUrl: string;
 	private readonly apiKey: string;
@@ -63,84 +68,83 @@ export class HttpClient {
 			}
 
 			const start = Date.now();
-			let status = 0;
-			let reported = false;
+			const result = await this.attemptOnce<T>(url, options);
+			const duration = Date.now() - start;
 
-			try {
-				const controller = new AbortController();
-				const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+			switch (result.type) {
+				case "success":
+					this.onRequest?.(options.method, url, 200, duration);
+					return result.data;
 
-				const signal = options.signal
-					? this.combineSignals(options.signal, controller.signal)
-					: controller.signal;
-
-				const response = await fetch(url, {
-					method: options.method,
-					headers: {
-						Authorization: `Bearer ${this.apiKey}`,
-						"Content-Type": "application/json",
-						Accept: "application/json",
-					},
-					body: options.body ? JSON.stringify(options.body) : undefined,
-					signal,
-				});
-
-				clearTimeout(timeoutId);
-				status = response.status;
-				this.parseRateLimitHeaders(response.headers);
-
-				if (response.ok) {
-					return (await response.json()) as T;
-				}
-
-				const errorBody = await response.text();
-				const error = this.createError(status, errorBody, response.headers);
-
-				if (this.isRetryable(status, options.method) && attempt < this.maxRetries) {
-					lastError = error;
+				case "retry":
+					this.onRequest?.(options.method, url, result.status, duration);
+					lastError = result.error;
 					continue;
-				}
 
-				throw error;
-			} catch (err) {
-				if (err instanceof HyperMemoryError) {
-					throw err;
-				}
-
-				if (err instanceof DOMException && err.name === "AbortError") {
-					if (options.signal?.aborted) {
-						reported = true;
-						this.onRequest?.(options.method, url, 0, Date.now() - start);
-						throw new NetworkError("Request was cancelled");
-					}
-					const timeoutErr = new TimeoutError(this.timeout);
-					if (attempt < this.maxRetries) {
-						lastError = timeoutErr;
-						continue;
-					}
-					reported = true;
-					this.onRequest?.(options.method, url, 0, Date.now() - start);
-					throw timeoutErr;
-				}
-
-				const networkErr = new NetworkError(
-					err instanceof Error ? err.message : "Network request failed",
-				);
-				if (attempt < this.maxRetries) {
-					lastError = networkErr;
-					continue;
-				}
-				reported = true;
-				this.onRequest?.(options.method, url, 0, Date.now() - start);
-				throw networkErr;
-			} finally {
-				if (!reported) {
-					this.onRequest?.(options.method, url, status, Date.now() - start);
-				}
+				case "fatal":
+					this.onRequest?.(options.method, url, result.status, duration);
+					throw result.error;
 			}
 		}
 
 		throw lastError ?? new NetworkError("Request failed after all retries");
+	}
+
+	private async attemptOnce<T>(url: string, options: RequestOptions): Promise<AttemptResult<T>> {
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+		const signal = options.signal
+			? this.combineSignals(options.signal, controller.signal)
+			: controller.signal;
+
+		try {
+			const response = await fetch(url, {
+				method: options.method,
+				headers: {
+					Authorization: `Bearer ${this.apiKey}`,
+					"Content-Type": "application/json",
+					Accept: "application/json",
+				},
+				body: options.body ? JSON.stringify(options.body) : undefined,
+				signal,
+			});
+
+			clearTimeout(timeoutId);
+			this.parseRateLimitHeaders(response.headers);
+
+			if (response.ok) {
+				const data = (await response.json()) as T;
+				return { type: "success", data };
+			}
+
+			const errorBody = await response.text();
+			const error = this.createError(response.status, errorBody, response.headers);
+
+			if (this.isRetryable(response.status, options.method)) {
+				return { type: "retry", error, status: response.status };
+			}
+
+			return { type: "fatal", error, status: response.status };
+		} catch (err) {
+			clearTimeout(timeoutId);
+
+			if (err instanceof HyperMemoryError) {
+				return { type: "fatal", error: err, status: err.status };
+			}
+
+			if (err instanceof DOMException && err.name === "AbortError") {
+				if (options.signal?.aborted) {
+					return { type: "fatal", error: new NetworkError("Request was cancelled"), status: 0 };
+				}
+				return { type: "retry", error: new TimeoutError(this.timeout), status: 0 };
+			}
+
+			const networkErr = new NetworkError(
+				err instanceof Error ? err.message : "Network request failed",
+			);
+			return { type: "retry", error: networkErr, status: 0 };
+		}
 	}
 
 	private buildUrl(path: string, params?: Record<string, string>): string {
@@ -229,6 +233,7 @@ export class HttpClient {
 	}
 
 	private isRetryable(status: number, method: string): boolean {
+		// 429 retries all methods — the server didn't process the request, so no double-write risk
 		if (status === 429) return true;
 		if (status === 502 || status === 503 || status === 504) {
 			return method === "GET" || method === "HEAD" || method === "DELETE";
@@ -250,9 +255,16 @@ export class HttpClient {
 			return AbortSignal.any([userSignal, timeoutSignal]);
 		}
 		const controller = new AbortController();
-		const onAbort = () => controller.abort();
-		userSignal.addEventListener("abort", onAbort, { once: true });
-		timeoutSignal.addEventListener("abort", onAbort, { once: true });
+		const onUserAbort = () => {
+			controller.abort();
+			timeoutSignal.removeEventListener("abort", onTimeoutAbort);
+		};
+		const onTimeoutAbort = () => {
+			controller.abort();
+			userSignal.removeEventListener("abort", onUserAbort);
+		};
+		userSignal.addEventListener("abort", onUserAbort, { once: true });
+		timeoutSignal.addEventListener("abort", onTimeoutAbort, { once: true });
 		return controller.signal;
 	}
 

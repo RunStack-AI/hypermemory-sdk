@@ -29,6 +29,7 @@ pnpm add @hypermemory/core @hypermemory/react @hypermemory/visualizer-core @cosm
 
 # 3D visualization (additional)
 pnpm add 3d-force-graph three
+pnpm add -D @types/three  # Required for TypeScript projects
 ```
 
 **Requirements:** Node.js >= 18.0.0
@@ -100,17 +101,22 @@ function App() {
 </HyperMemoryProvider>
 ```
 
-### Vanilla JS (No Framework)
+### Vanilla JS / TypeScript (No Framework)
 
 ```typescript
+// Inline snippet — works in any bundler-based project (Vite, esbuild, Webpack)
 import { HyperMemoryClient } from "@hypermemory/core";
 import { CosmographViewer } from "@hypermemory/visualizer-core";
 
 const client = new HyperMemoryClient({ apiKey: "hm_your_key" });
-const viewer = new CosmographViewer(document.getElementById("graph")!);
+const viewer = new CosmographViewer(document.getElementById("graph")!, {
+  showHyperedges: true,
+  onNodeClick: (node) => console.log("Clicked:", node.node_key),
+  onHullClick: (hull) => console.log("Hull:", hull.label),
+});
 
 const graph = await client.getPublicGraph("graph:your_id");
-await viewer.setData(graph.nodes, graph.links);
+await viewer.setData(graph.nodes, graph.links, graph.hyperedges);
 ```
 
 ## API Reference
@@ -123,7 +129,7 @@ await viewer.setData(graph.nodes, graph.links);
 const hm = new HyperMemoryClient({
   apiKey: string;       // Required: your hm_* API key
   baseUrl?: string;     // Default: "https://api.hypermemory.io"
-  maxRetries?: number;  // Default: 3 (retries on 429/503)
+  maxRetries?: number;  // Default: 3 (retries on 429; 5xx for GET/HEAD/DELETE only)
   timeout?: number;     // Default: 30000ms
   onRequest?: (method, url, status, durationMs) => void;
 });
@@ -219,7 +225,9 @@ All errors extend `HyperMemoryError`:
 
 ```typescript
 import {
-  AuthenticationError,  // 401/403 — invalid API key
+  AuthenticationError,  // 401 — invalid API key
+  ForbiddenError,       // 403 — insufficient permissions
+  BadRequestError,      // 400 — malformed request
   NotFoundError,        // 404 — resource doesn't exist
   RateLimitError,       // 429 — rate limited (check .retryAfter)
   ValidationError,      // 422 — invalid request body
@@ -238,7 +246,11 @@ try {
 }
 ```
 
-The SDK automatically retries on 429/503 with exponential backoff (respecting `Retry-After`).
+**Automatic retries:** The SDK retries failed requests with exponential backoff:
+- **429 (Rate Limited)** — retried on all methods (the server didn't process the request)
+- **502/503/504 (Server Error)** — retried only on `GET`/`HEAD`/`DELETE` (non-idempotent writes like POST are not retried to prevent double-writes)
+
+The `Retry-After` header is respected when present. Writes without an idempotency key are best-effort across network blips.
 
 ## Rate Limits
 

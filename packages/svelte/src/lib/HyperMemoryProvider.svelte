@@ -7,10 +7,11 @@ interface Props {
 	baseUrl?: string;
 	maxRetries?: number;
 	timeout?: number;
+	onRequest?: (method: string, url: string, status: number, durationMs: number) => void;
 	children: import("svelte").Snippet;
 }
 
-const { apiKey, baseUrl, maxRetries, timeout, children }: Props = $props();
+const { apiKey, baseUrl, maxRetries, timeout, onRequest, children }: Props = $props();
 
 const client = $derived(
 	new HyperMemoryClient({
@@ -18,6 +19,7 @@ const client = $derived(
 		baseUrl,
 		maxRetries,
 		timeout,
+		onRequest,
 	}),
 );
 

@@ -31,6 +31,8 @@ export interface HyperMemoryProviderProps {
 	maxRetries?: number;
 	/** Timeout in ms */
 	timeout?: number;
+	/** Request lifecycle callback (called once per request with method, url, status, duration) */
+	onRequest?: (method: string, url: string, status: number, durationMs: number) => void;
 	/** Child components */
 	children: ReactNode;
 }
@@ -40,11 +42,12 @@ export function HyperMemoryProvider({
 	baseUrl,
 	maxRetries,
 	timeout,
+	onRequest,
 	children,
 }: HyperMemoryProviderProps) {
 	const client = useMemo(
-		() => new HyperMemoryClient({ apiKey, baseUrl, maxRetries, timeout }),
-		[apiKey, baseUrl, maxRetries, timeout],
+		() => new HyperMemoryClient({ apiKey, baseUrl, maxRetries, timeout, onRequest }),
+		[apiKey, baseUrl, maxRetries, timeout, onRequest],
 	);
 
 	return <HyperMemoryContext.Provider value={client}>{children}</HyperMemoryContext.Provider>;

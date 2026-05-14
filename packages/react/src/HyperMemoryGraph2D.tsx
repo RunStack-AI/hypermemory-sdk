@@ -9,8 +9,9 @@
  *
  * <HyperMemoryGraph2D
  *   graphId="graph:abc123"
- *   showHyperedges={false}
+ *   showHyperedges={true}
  *   onNodeClick={(node) => console.log(node)}
+ *   onHullClick={(hull) => console.log(hull)}
  *   style={{ width: "100%", height: "600px" }}
  * />
  * ```
@@ -77,6 +78,8 @@ export function HyperMemoryGraph2D({
 	useEffect(() => {
 		if (!containerRef.current) return;
 
+		const ac = new AbortController();
+
 		const options: CosmographViewerOptions = {
 			showHyperedges,
 			showOrphans,
@@ -93,13 +96,18 @@ export function HyperMemoryGraph2D({
 		if (propNodes && propLinks) {
 			viewer.setData(propNodes, propLinks, propHyperedges ?? []);
 		} else if (graphId) {
-			client.getPublicGraph(graphId).then(
-				(graph) => viewer.setData(graph.nodes, graph.links),
-				(err) => console.error("[HyperMemoryGraph2D] Failed to fetch graph:", err),
+			client.getPublicGraph(graphId, { signal: ac.signal }).then(
+				(graph) => {
+					if (!ac.signal.aborted) viewer.setData(graph.nodes, graph.links);
+				},
+				(err) => {
+					if (!ac.signal.aborted) console.error("[HyperMemoryGraph2D] Failed to fetch graph:", err);
+				},
 			);
 		}
 
 		return () => {
+			ac.abort();
 			viewer.destroy();
 			viewerRef.current = null;
 		};

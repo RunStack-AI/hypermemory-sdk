@@ -13,6 +13,7 @@ pnpm add @hypermemory/visualizer-core @cosmograph/cosmograph
 
 # For 3D visualization
 pnpm add @hypermemory/visualizer-core 3d-force-graph three
+pnpm add -D @types/three  # Required for TypeScript users
 ```
 
 ## Usage

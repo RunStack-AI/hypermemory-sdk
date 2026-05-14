@@ -42,7 +42,8 @@ const {
 
 let containerEl: HTMLElement;
 let viewer: ForceGraph3DViewer | null = null;
-let mounted = false;
+let mounted = $state(false);
+let abortController: AbortController | null = null;
 
 const client = useHyperMemory();
 
@@ -64,14 +65,28 @@ $effect(() => {
 	if (propNodes && propLinks) {
 		viewer.setData(propNodes, propLinks);
 	} else if (graphId) {
-		client.getPublicGraph(graphId).then(
-			(graph) => viewer?.setData(graph.nodes, graph.links),
-			(err) => console.error("[HyperMemoryGraph3D] Failed to fetch graph:", err),
+		abortController?.abort();
+		const ac = new AbortController();
+		abortController = ac;
+		client.getPublicGraph(graphId, { signal: ac.signal }).then(
+			(graph) => {
+				if (!ac.signal.aborted) viewer?.setData(graph.nodes, graph.links);
+			},
+			(err) => {
+				if (!ac.signal.aborted) console.error("[HyperMemoryGraph3D] Failed to fetch graph:", err);
+			},
 		);
 	}
 });
 
+$effect(() => {
+	if (viewer && onNodeClick) {
+		viewer.onNodeClick(onNodeClick);
+	}
+});
+
 onDestroy(() => {
+	abortController?.abort();
 	viewer?.destroy();
 	viewer = null;
 });

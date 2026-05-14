@@ -65,6 +65,8 @@ export function HyperMemoryGraph3D({
 	useEffect(() => {
 		if (!containerRef.current) return;
 
+		const ac = new AbortController();
+
 		const options: ForceGraph3DOptions = {
 			showOrphans,
 			showDocs,
@@ -79,13 +81,18 @@ export function HyperMemoryGraph3D({
 		if (propNodes && propLinks) {
 			viewer.setData(propNodes, propLinks);
 		} else if (graphId) {
-			client.getPublicGraph(graphId).then(
-				(graph) => viewer.setData(graph.nodes, graph.links),
-				(err) => console.error("[HyperMemoryGraph3D] Failed to fetch graph:", err),
+			client.getPublicGraph(graphId, { signal: ac.signal }).then(
+				(graph) => {
+					if (!ac.signal.aborted) viewer.setData(graph.nodes, graph.links);
+				},
+				(err) => {
+					if (!ac.signal.aborted) console.error("[HyperMemoryGraph3D] Failed to fetch graph:", err);
+				},
 			);
 		}
 
 		return () => {
+			ac.abort();
 			viewer.destroy();
 			viewerRef.current = null;
 		};
