@@ -1,5 +1,5 @@
 {
-	"name": "@hypermemory/visualizer-core",
+	"name": "@runstack-ai/hypermemory-visualizer-core",
 	"version": "1.0.0",
 	"description": "HyperMemory graph visualization — Cosmograph 2D and 3D Force Graph viewers",
 	"type": "module",
@@ -25,6 +25,10 @@
 		"dev": "tsup --watch",
 		"typecheck": "tsc --noEmit"
 	},
+	"publishConfig": {
+		"registry": "https://npm.pkg.github.com",
+		"access": "public"
+	},
 	"peerDependencies": {
 		"@cosmograph/cosmograph": ">=2.0.0",
 		"3d-force-graph": ">=1.70.0",
@@ -44,5 +48,10 @@
 		"typescript": "^5.6.0"
 	},
 	"keywords": ["hypermemory", "graph", "visualization", "cosmograph", "3d", "three.js"],
-	"license": "MIT"
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/RunStack-AI/hypermemory-sdk.git",
+		"directory": "packages/visualizer-core"
+	}
 }

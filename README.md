@@ -8,10 +8,10 @@ Official TypeScript SDK for the [HyperMemory](https://hypermemory.io) agentic lo
 
 | Package | Description |
 |---------|-------------|
-| [`@hypermemory/core`](./packages/core) | Client SDK — store, recall, update, traverse |
-| [`@hypermemory/visualizer-core`](./packages/visualizer-core) | Vanilla JS graph viewers (Cosmograph 2D + Three.js 3D) |
-| [`@hypermemory/svelte`](./packages/svelte) | Svelte 5 components + composable |
-| [`@hypermemory/react`](./packages/react) | React 18+ components + hook |
+| [`@runstack-ai/hypermemory-core`](./packages/core) | Client SDK — store, recall, update, traverse |
+| [`@runstack-ai/hypermemory-visualizer-core`](./packages/visualizer-core) | Vanilla JS graph viewers (Cosmograph 2D + Three.js 3D) |
+| [`@runstack-ai/hypermemory-svelte`](./packages/svelte) | Svelte 5 components + composable |
+| [`@runstack-ai/hypermemory-react`](./packages/react) | React 18+ components + hook |
 
 ## Installation
 
@@ -19,13 +19,13 @@ Install only what you need:
 
 ```bash
 # Core client only (Node.js, Deno, Bun, browsers)
-pnpm add @hypermemory/core
+pnpm add @runstack-ai/hypermemory-core
 
 # Svelte app with visualization
-pnpm add @hypermemory/core @hypermemory/svelte @hypermemory/visualizer-core @cosmograph/cosmograph
+pnpm add @runstack-ai/hypermemory-core @runstack-ai/hypermemory-svelte @runstack-ai/hypermemory-visualizer-core @cosmograph/cosmograph
 
 # React app with visualization
-pnpm add @hypermemory/core @hypermemory/react @hypermemory/visualizer-core @cosmograph/cosmograph
+pnpm add @runstack-ai/hypermemory-core @runstack-ai/hypermemory-react @runstack-ai/hypermemory-visualizer-core @cosmograph/cosmograph
 
 # 3D visualization (additional)
 pnpm add 3d-force-graph three
@@ -49,7 +49,7 @@ The graph is searched semantically by `recall()` (vector similarity over descrip
 ### Store and Recall Knowledge
 
 ```typescript
-import { HyperMemoryClient } from "@hypermemory/core";
+import { HyperMemoryClient } from "@runstack-ai/hypermemory-core";
 
 const hm = new HyperMemoryClient({ apiKey: "hm_your_api_key" });
 
@@ -78,7 +78,7 @@ console.log(`${overview.nodes} nodes, ${overview.edges} edges, ${overview.hypere
 ### Visualize a Graph (React)
 
 ```tsx
-import { HyperMemoryProvider, HyperMemoryGraph2D } from "@hypermemory/react";
+import { HyperMemoryProvider, HyperMemoryGraph2D } from "@runstack-ai/hypermemory-react";
 
 function App() {
   return (
@@ -98,7 +98,7 @@ function App() {
 
 ```svelte
 <script>
-  import { HyperMemoryProvider, HyperMemoryGraph2D } from "@hypermemory/svelte";
+  import { HyperMemoryProvider, HyperMemoryGraph2D } from "@runstack-ai/hypermemory-svelte";
 </script>
 
 <HyperMemoryProvider apiKey="hm_your_api_key">
@@ -115,8 +115,8 @@ function App() {
 
 ```typescript
 // Inline snippet — works in any bundler-based project (Vite, esbuild, Webpack)
-import { HyperMemoryClient } from "@hypermemory/core";
-import { CosmographViewer } from "@hypermemory/visualizer-core";
+import { HyperMemoryClient } from "@runstack-ai/hypermemory-core";
+import { CosmographViewer } from "@runstack-ai/hypermemory-visualizer-core";
 
 const client = new HyperMemoryClient({ apiKey: "hm_your_key" });
 const viewer = new CosmographViewer(document.getElementById("graph")!, {
@@ -126,14 +126,14 @@ const viewer = new CosmographViewer(document.getElementById("graph")!, {
 });
 
 const graph = await client.getPublicGraph("graph:your_id");
-await viewer.setData(graph.nodes, graph.links, graph.hyperedges);
+await viewer.setData(graph.nodes, graph.links);
 ```
 
 ### Server-Side Rendering (Next.js App Router, SvelteKit)
 
 The framework bindings are **client-only**. All React components carry a `"use client";` directive; Svelte components mount via `onMount` and only render in the browser. Importing them from a server component in Next.js works (they'll be deferred), but they will not render any output on the server.
 
-If you call `HyperMemoryClient` directly from a server route (e.g. Next.js Route Handler, SvelteKit `+page.server.ts`), use the `@hypermemory/core` package — no DOM dependencies, native `fetch` only.
+If you call `HyperMemoryClient` directly from a server route (e.g. Next.js Route Handler, SvelteKit `+page.server.ts`), use the `@runstack-ai/hypermemory-core` package — no DOM dependencies, native `fetch` only.
 
 ## Cancellation
 
@@ -179,7 +179,7 @@ if (rl) console.log(`${rl.remaining}/${rl.limit} requests remaining, resets at $
 
 ## API Reference
 
-### `@hypermemory/core`
+### `@runstack-ai/hypermemory-core`
 
 #### `HyperMemoryClient`
 
@@ -206,11 +206,11 @@ const hm = new HyperMemoryClient({
 | `findRelated(req)` | Graph traversal from a starting node |
 | `timelineWrite(req)` | Write a timeline event |
 | `timelineRead(req?)` | Read timeline events |
-| `exportGraph(opts?)` | Export full graph as JSON/CSV |
-| `getPublicGraph(graphId)` | Fetch a public graph by ID |
+| `exportGraph(opts?)` | Export full graph as JSON |
+| `getPublicGraph(graphId)` | Fetch a graph by ID (requires auth + api_access) |
 | `getRateLimit()` | Get rate limit info from last request |
 
-### `@hypermemory/visualizer-core`
+### `@runstack-ai/hypermemory-visualizer-core`
 
 #### `CosmographViewer` (2D, GPU-accelerated)
 
@@ -261,7 +261,7 @@ viewer.fitToScreen();
 viewer.destroy();
 ```
 
-### `@hypermemory/svelte`
+### `@runstack-ai/hypermemory-svelte`
 
 | Export | Description |
 |--------|-------------|
@@ -270,7 +270,7 @@ viewer.destroy();
 | `HyperMemoryGraph3D` | 3D Force Graph wrapper component |
 | `useHyperMemory()` | Composable returning the client instance |
 
-### `@hypermemory/react`
+### `@runstack-ai/hypermemory-react`
 
 | Export | Description |
 |--------|-------------|
@@ -295,7 +295,7 @@ import {
   ServerError,          // 500+ — server failure
   NetworkError,         // Request didn't reach server
   TimeoutError,         // Request timed out
-} from "@hypermemory/core";
+} from "@runstack-ai/hypermemory-core";
 
 try {
   await hm.store({ key: "test", description: "..." });
@@ -316,25 +316,25 @@ The `Retry-After` header is respected when present. If you need writes to surviv
 
 Per-minute sliding window by plan:
 
-| Operation | Free | Basic | Pro | Business | Enterprise |
-|-----------|------|-------|-----|----------|-----------|
-| Write (store/update/forget) | 10 | 20 | 60 | 120 | Custom |
+| Operation | Free | Basic | Pro | Business | Custom |
+|-----------|------|-------|-----|----------|--------|
+| Write (store/update/forget/addRelationships) | 10 | 20 | 60 | 120 | Custom |
 | Ingest (ingest/upload) | 3 | 10 | 30 | 100 | Custom |
-| Read (recall/overview/etc) | 30 | 60 | 120 | 240 | Custom |
-| HTTP mutations | 60/min | 120 | 300 | 600 | Custom |
+| Read (recall/overview/relationships/findRelated) | 30 | 60 | 120 | 240 | Custom |
 
 | Tier | Description |
 |------|-------------|
-| **Write** | Per-tool limit on logical operations (store/update/forget). Applies to both REST and MCP. |
+| **Write** | Per-tool limit on write operations (store/update/forget/addRelationships). Applies to both REST and MCP. |
 | **Ingest** | Per-tool limit on bulk ingestion endpoints. |
-| **Read** | Per-tool limit on retrieval (recall/overview/relationships/timeline). |
-| **HTTP mutations** | Overall raw HTTP POST/PUT/DELETE budget across all endpoints, regardless of tool. The effective cap is the minimum of the tool-specific limit and this. |
+| **Read** | Per-tool limit on retrieval (recall/overview/relationships/findRelated). |
+
+> **Note:** Timeline operations are not currently rate-limited.
 
 ## Authentication
 
 All API calls require a Bearer token with your `hm_*` API key:
 
-- Keys are generated during account provisioning or from the HyperMemory dashboard
+- Keys are generated during account provisioning by your platform provider
 - Keys are HMAC-SHA256 validated server-side
 - Each request is independently authenticated (no sessions)
 
@@ -344,7 +344,7 @@ The HyperMemory MCP server at `POST https://api.hypermemory.io/mcp` accepts the 
 
 ## Going to Production
 
-- **Never put `hm_*` keys in browser-bundled code.** All Bearer-token calls should be made server-side or proxied. Public-graph reads (`getPublicGraph`) are the only call that's safe from a browser without a key.
+- **Never put `hm_*` keys in browser-bundled code.** All Bearer-token calls should be made server-side or proxied. There are no unauthenticated SDK endpoints.
 - **Memoize the `HyperMemoryClient` instance.** Each instance maintains its own retry/rate-limit state. The React/Svelte providers already do this — for vanilla use, hold a single module-level instance.
 - **Handle `RateLimitError.retryAfter` and `PlanLimitError` separately.** The first is transient (retry later); the second requires user action (upgrade plan).
 - **Tag requests via `onRequest`** for tracing — emit to your observability system of choice.

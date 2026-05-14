@@ -5,7 +5,7 @@
  *
  * @example
  * ```tsx
- * import { HyperMemoryGraph2D } from "@hypermemory/react";
+ * import { HyperMemoryGraph2D } from "@runstack-ai/hypermemory-react";
  *
  * <HyperMemoryGraph2D
  *   graphId="graph:abc123"
@@ -17,8 +17,8 @@
  * ```
  */
 
-import { CosmographViewer, type CosmographViewerOptions } from "@hypermemory/visualizer-core";
-import type { GraphLink, GraphNode, HyperedgeHull } from "@hypermemory/visualizer-core";
+import { CosmographViewer, type CosmographViewerOptions } from "@runstack-ai/hypermemory-visualizer-core";
+import type { GraphLink, GraphNode, HyperedgeHull } from "@runstack-ai/hypermemory-visualizer-core";
 import { type CSSProperties, useEffect, useRef } from "react";
 import { useHyperMemory } from "./useHyperMemory.js";
 

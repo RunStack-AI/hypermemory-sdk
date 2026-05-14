@@ -2,6 +2,46 @@
 
 ## 1.0.0 (2026-05-14)
 
+### Type Corrections & Package Rename (post-release)
+
+All response types have been audited against the live server and corrected to match exactly. Packages have been renamed from `@hypermemory/*` to `@runstack-ai/hypermemory-*` for GitHub Packages publishing.
+
+#### Breaking Changes (from 1.0.0)
+
+- **Package rename:** All packages are now under `@runstack-ai/` scope:
+  - `@hypermemory/core` → `@runstack-ai/hypermemory-core`
+  - `@hypermemory/visualizer-core` → `@runstack-ai/hypermemory-visualizer-core`
+  - `@hypermemory/svelte` → `@runstack-ai/hypermemory-svelte`
+  - `@hypermemory/react` → `@runstack-ai/hypermemory-react`
+- **`forget()` cascade default changed** from `false` to `true` (matches server default)
+- **`TimelineEvent.timestamp`** renamed to `TimelineEvent.ts` (matches server field name)
+- **`TimelineWriteResponse`** changed from `{ written: boolean; timestamp: string }` to `{ id: number; ts: string; summary: string }`
+
+#### Type Fixes
+
+- **`ExportOptions`**: Replaced `format`/`include_data` with `include_ontology`/`include_session_data`
+- **`ExportResponse`** (new): `{ data, node_count, edge_count, hyperedge_count, duration_seconds }`
+- **`NodeRelationshipsResponse`** (new): Replaces `NodeRelationship[]` with `{ key, binary_edges: BinaryEdge[], hyperedges: HyperedgeDetail[] }`
+- **`AddRelationshipsResponse`** (new): `{ created: Array, errors: Array }` (was `{ created: number }`)
+- **`FindRelatedResponse`** (new): Separate from `RecallResponse`, includes `hop` and `rel` fields
+- **`TimelineEvent`**: Added `source` and `tool` fields, renamed `timestamp` → `ts`
+- **`IngestResponse`**: `nodes_updated`, `edges_created`, `hyperedges_created` are now optional; added `message`
+
+#### Documentation Fixes
+
+- **`getPublicGraph`**: Corrected — requires authentication (`hm_*` Bearer token + `api_access` enabled)
+- **Rate limits**: Removed incorrect "HTTP mutations" row; added `addRelationships` to Write tier; renamed Enterprise → Custom; noted timeline ops are not rate-limited
+- **Authentication**: Removed false claim about dashboard key generation
+- **Vanilla JS example**: Removed reference to `graph.hyperedges` (not returned by `getPublicGraph`)
+
+#### Publishing
+
+- All packages configured for GitHub Packages (`registry: "https://npm.pkg.github.com"`)
+
+---
+
+## 1.0.0 (2026-05-14)
+
 ### Stable Release
 
 The HyperMemory SDK reaches 1.0 — a full-featured TypeScript SDK for the HyperMemory agentic long-term memory platform. This release includes a framework-agnostic core client, GPU-accelerated 2D and 3D graph visualization with hyperedge hull rendering, and first-class bindings for React 18+ and Svelte 5.
@@ -10,14 +50,14 @@ The HyperMemory SDK reaches 1.0 — a full-featured TypeScript SDK for the Hyper
 
 | Package | Description |
 |---------|-------------|
-| `@hypermemory/core` | Framework-agnostic HTTP client — zero external dependencies |
-| `@hypermemory/visualizer-core` | Vanilla JS viewers (Cosmograph 2D + Three.js 3D) |
-| `@hypermemory/svelte` | Svelte 5 components + runes-based composable |
-| `@hypermemory/react` | React 18+ components + hook (Next.js App Router compatible) |
+| `@runstack-ai/hypermemory-core` | Framework-agnostic HTTP client — zero external dependencies |
+| `@runstack-ai/hypermemory-visualizer-core` | Vanilla JS viewers (Cosmograph 2D + Three.js 3D) |
+| `@runstack-ai/hypermemory-svelte` | Svelte 5 components + runes-based composable |
+| `@runstack-ai/hypermemory-react` | React 18+ components + hook (Next.js App Router compatible) |
 
 ---
 
-### `@hypermemory/core`
+### `@runstack-ai/hypermemory-core`
 
 **Client API** — Full REST API coverage for the HyperMemory platform:
 
@@ -52,7 +92,7 @@ The HyperMemory SDK reaches 1.0 — a full-featured TypeScript SDK for the Hyper
 
 ---
 
-### `@hypermemory/visualizer-core`
+### `@runstack-ai/hypermemory-visualizer-core`
 
 **CosmographViewer** — GPU-accelerated 2D graph visualization:
 
@@ -79,7 +119,7 @@ The HyperMemory SDK reaches 1.0 — a full-featured TypeScript SDK for the Hyper
 
 ---
 
-### `@hypermemory/react`
+### `@runstack-ai/hypermemory-react`
 
 - `HyperMemoryProvider` — React Context provider with `apiKey`, `baseUrl`, `maxRetries`, `timeout`, `onRequest` props
 - `HyperMemoryGraph2D` — managed Cosmograph 2D wrapper with `graphId`, `nodes`/`links` props, `onNodeClick`/`onHullClick` callbacks
@@ -91,7 +131,7 @@ The HyperMemory SDK reaches 1.0 — a full-featured TypeScript SDK for the Hyper
 
 ---
 
-### `@hypermemory/svelte`
+### `@runstack-ai/hypermemory-svelte`
 
 - `HyperMemoryProvider` — Svelte 5 context provider with reactive getter pattern
 - `HyperMemoryGraph2D` — reactive Cosmograph 2D wrapper with `$effect`-based data loading
@@ -126,7 +166,7 @@ The HyperMemory SDK reaches 1.0 — a full-featured TypeScript SDK for the Hyper
 
 Bug fixes across all packages — see below for details.
 
-**`@hypermemory/visualizer-core`:**
+**`@runstack-ai/hypermemory-visualizer-core`:**
 - Hull rendering implemented with frame-synced canvas overlay
 - Hull canvas uses `pointer-events: none` for click passthrough
 - HiDPI canvas rendering at `devicePixelRatio`
@@ -140,7 +180,7 @@ Bug fixes across all packages — see below for details.
 - Applied `chargeStrength`/`linkDistance` to 3D simulation
 - Fixed `flyToNode` falsy-coord check
 
-**`@hypermemory/core`:**
+**`@runstack-ai/hypermemory-core`:**
 - Added `BadRequestError` (400) and `ForbiddenError` (403)
 - `AuthenticationError` is 401-only
 - `Retry-After` header honored
@@ -150,13 +190,13 @@ Bug fixes across all packages — see below for details.
 - `AbortSignal` support via `MethodOptions`
 - Fixed `combineSignals` listener leak
 
-**`@hypermemory/svelte`:**
+**`@runstack-ai/hypermemory-svelte`:**
 - `src/lib/` layout for `svelte-package`
 - Single `setContext` with reactive getter
 - Fixed `mounted` flag, stale callbacks, AbortController cleanup
 - Exposed `onRequest` prop
 
-**`@hypermemory/react`:**
+**`@runstack-ai/hypermemory-react`:**
 - `"use client"` directives on all exports
 - `useRef` stale-callback fix, AbortController cleanup
 - Exposed `onRequest` prop

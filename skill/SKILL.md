@@ -20,10 +20,10 @@ Use the Shell tool to run `hm` commands. The CLI is already installed.
 
 ## SDK INTEGRATION
 
-For programmatic access via TypeScript/JavaScript, use the `@hypermemory/core` package:
+For programmatic access via TypeScript/JavaScript, use the `@runstack-ai/hypermemory-core` package:
 
 ```typescript
-import { HyperMemoryClient } from "@hypermemory/core";
+import { HyperMemoryClient } from "@runstack-ai/hypermemory-core";
 
 const hm = new HyperMemoryClient({ apiKey: "hm_your_api_key" });
 
@@ -53,7 +53,7 @@ const events = await hm.timelineRead({ period: "7d" });
 ### Visualization
 
 ```typescript
-import { CosmographViewer, ForceGraph3DViewer } from "@hypermemory/visualizer-core";
+import { CosmographViewer, ForceGraph3DViewer } from "@runstack-ai/hypermemory-visualizer-core";
 
 // 2D GPU-accelerated graph
 const viewer2D = new CosmographViewer(element, { showHyperedges: false });

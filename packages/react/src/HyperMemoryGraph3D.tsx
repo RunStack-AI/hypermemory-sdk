@@ -5,7 +5,7 @@
  *
  * @example
  * ```tsx
- * import { HyperMemoryGraph3D } from "@hypermemory/react";
+ * import { HyperMemoryGraph3D } from "@runstack-ai/hypermemory-react";
  *
  * <HyperMemoryGraph3D
  *   graphId="graph:abc123"
@@ -15,8 +15,8 @@
  * ```
  */
 
-import { type ForceGraph3DOptions, ForceGraph3DViewer } from "@hypermemory/visualizer-core";
-import type { GraphLink, GraphNode } from "@hypermemory/visualizer-core";
+import { type ForceGraph3DOptions, ForceGraph3DViewer } from "@runstack-ai/hypermemory-visualizer-core";
+import type { GraphLink, GraphNode } from "@runstack-ai/hypermemory-visualizer-core";
 import { type CSSProperties, useEffect, useRef } from "react";
 import { useHyperMemory } from "./useHyperMemory.js";
 

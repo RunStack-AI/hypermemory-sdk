@@ -6,7 +6,7 @@
  *
  * @example
  * ```typescript
- * import { CosmographViewer } from "@hypermemory/visualizer-core";
+ * import { CosmographViewer } from "@runstack-ai/hypermemory-visualizer-core";
  *
  * // showHyperedges defaults to false; set true and pass hyperedges to setData to render hulls
  * const viewer = new CosmographViewer(document.getElementById("graph")!, {

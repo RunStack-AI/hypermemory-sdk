@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * @hypermemory/react
+ * @runstack-ai/hypermemory-react
  *
  * React 18+ components for HyperMemory hypergraph visualization and client access.
  *

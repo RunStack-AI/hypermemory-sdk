@@ -119,10 +119,10 @@ export interface AddRelationshipsRequest {
 
 /** Options for exporting the graph. */
 export interface ExportOptions {
-	/** Export format (default: "json") */
-	format?: "json" | "csv";
-	/** Include node data in export */
-	include_data?: boolean;
+	/** Include ontology types and relations in export (default: true) */
+	include_ontology?: boolean;
+	/** Include session/access data in export (default: false) */
+	include_session_data?: boolean;
 }
 
 // ─── Response Types ────────────────────────────────────────────────────────────
@@ -201,12 +201,14 @@ export interface OverviewResponse {
 export interface IngestResponse {
 	/** Number of new nodes created */
 	nodes_created: number;
-	/** Number of existing nodes updated */
-	nodes_updated: number;
-	/** Number of edges created */
-	edges_created: number;
-	/** Number of hyperedges created */
-	hyperedges_created: number;
+	/** Number of existing nodes updated (omitted when nothing was extracted) */
+	nodes_updated?: number;
+	/** Number of edges created (omitted when nothing was extracted) */
+	edges_created?: number;
+	/** Number of hyperedges created (omitted when nothing was extracted) */
+	hyperedges_created?: number;
+	/** Human-readable message (present when extraction yields no entities) */
+	message?: string;
 }
 
 /** A node in the public graph response. */
@@ -237,12 +239,30 @@ export interface PublicGraphResponse {
 	links: GraphLink[];
 }
 
+/** Response from the graph export endpoint. */
+export interface ExportResponse {
+	/** Full exported graph as a JSON string */
+	data: string;
+	/** Number of nodes exported */
+	node_count: number;
+	/** Number of binary edges exported */
+	edge_count: number;
+	/** Number of hyperedges exported */
+	hyperedge_count: number;
+	/** Export duration in seconds */
+	duration_seconds: number;
+}
+
 /** A single timeline event. */
 export interface TimelineEvent {
+	/** ISO timestamp */
+	ts: string;
 	/** Event summary */
 	summary: string;
-	/** ISO timestamp */
-	timestamp: string;
+	/** Event source (e.g. "agent") */
+	source: string;
+	/** Tool that generated the event (if any) */
+	tool?: string;
 	/** Related node key (if any) */
 	node_key?: string;
 	/** Event metadata */
@@ -257,15 +277,70 @@ export interface TimelineReadResponse {
 
 /** Response from timeline write. */
 export interface TimelineWriteResponse {
-	written: boolean;
-	timestamp: string;
+	/** Auto-generated event ID */
+	id: number;
+	/** ISO timestamp of the created event */
+	ts: string;
+	/** The summary that was written */
+	summary: string;
 }
 
-/** Relationship details for a node. */
-export interface NodeRelationship {
-	from_key: string;
-	to_key: string;
-	relationship: string;
+/** A binary edge (pairwise relationship) for a node. */
+export interface BinaryEdge {
+	edge_id: string;
+	relationship: string | null;
+	direction: string | null;
+	description: string | null;
+	in_node: string;
+	out_node: string;
+}
+
+/** A hyperedge (N-ary relationship) involving a node. */
+export interface HyperedgeDetail {
+	hyperedge_id: string;
+	relationship: string | null;
+	description: string | null;
+	participants: string[];
+}
+
+/** Response from getRelationships — binary edges and hyperedges for a node. */
+export interface NodeRelationshipsResponse {
+	/** The node key queried */
+	key: string;
+	/** Pairwise relationships */
+	binary_edges: BinaryEdge[];
+	/** N-ary hyperedge relationships */
+	hyperedges: HyperedgeDetail[];
+}
+
+/** Response from addRelationships. */
+export interface AddRelationshipsResponse {
+	/** Successfully created relationships (detail objects) */
+	created: Array<Record<string, unknown>>;
+	/** Relationships that failed to create (error details) */
+	errors: Array<Record<string, unknown>>;
+}
+
+/** A single result from graph traversal (findRelated). */
+export interface FindRelatedResult {
+	/** Node key */
+	key: string;
+	/** Node description */
+	description: string;
+	/** Relevance score (may be absent in chain traversal) */
+	score?: number;
+	/** Relationship label from the traversal path */
+	rel?: string;
+	/** Hop distance from start node */
+	hop?: number;
+}
+
+/** Response from findRelated graph traversal. */
+export interface FindRelatedResponse {
+	/** Related nodes found via traversal */
+	results: FindRelatedResult[];
+	/** Total count of results */
+	count: number;
 }
 
 // ─── Client Configuration ──────────────────────────────────────────────────────

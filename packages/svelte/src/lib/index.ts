@@ -1,5 +1,5 @@
 /**
- * @hypermemory/svelte
+ * @runstack-ai/hypermemory-svelte
  *
  * Svelte 5 components for HyperMemory hypergraph visualization and client access.
  *

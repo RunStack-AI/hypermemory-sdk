@@ -29,10 +29,10 @@ importers:
 
   packages/react:
     devDependencies:
-      '@hypermemory/core':
+      '@runstack-ai/hypermemory-core':
         specifier: workspace:*
         version: link:../core
-      '@hypermemory/visualizer-core':
+      '@runstack-ai/hypermemory-visualizer-core':
         specifier: workspace:*
         version: link:../visualizer-core
       '@types/react':
@@ -56,10 +56,10 @@ importers:
 
   packages/svelte:
     devDependencies:
-      '@hypermemory/core':
+      '@runstack-ai/hypermemory-core':
         specifier: workspace:*
         version: link:../core
-      '@hypermemory/visualizer-core':
+      '@runstack-ai/hypermemory-visualizer-core':
         specifier: workspace:*
         version: link:../visualizer-core
       '@sveltejs/package':

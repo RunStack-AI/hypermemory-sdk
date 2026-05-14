@@ -1,5 +1,5 @@
 {
-	"name": "@hypermemory/core",
+	"name": "@runstack-ai/hypermemory-core",
 	"version": "1.0.0",
 	"description": "HyperMemory client SDK — store, recall, and traverse hypergraphs",
 	"type": "module",
@@ -25,10 +25,19 @@
 		"dev": "tsup --watch",
 		"typecheck": "tsc --noEmit"
 	},
+	"publishConfig": {
+		"registry": "https://npm.pkg.github.com",
+		"access": "public"
+	},
 	"devDependencies": {
 		"tsup": "^8.3.0",
 		"typescript": "^5.6.0"
 	},
 	"keywords": ["hypermemory", "hypergraph", "memory", "api", "sdk"],
-	"license": "MIT"
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/RunStack-AI/hypermemory-sdk.git",
+		"directory": "packages/core"
+	}
 }

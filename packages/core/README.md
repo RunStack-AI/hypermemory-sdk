@@ -1,19 +1,19 @@
-# @hypermemory/core
+# @runstack-ai/hypermemory-core
 
 Framework-agnostic TypeScript client for the HyperMemory hypergraph API. Zero external dependencies — uses native `fetch`.
 
 ## Install
 
 ```bash
-pnpm add @hypermemory/core
+pnpm add @runstack-ai/hypermemory-core
 # or
-npm install @hypermemory/core
+npm install @runstack-ai/hypermemory-core
 ```
 
 ## Minimum Example
 
 ```typescript
-import { HyperMemoryClient } from "@hypermemory/core";
+import { HyperMemoryClient } from "@runstack-ai/hypermemory-core";
 
 const hm = new HyperMemoryClient({ apiKey: "hm_your_api_key" });
 

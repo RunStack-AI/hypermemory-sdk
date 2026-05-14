@@ -8,7 +8,7 @@ We aim to acknowledge within 48 hours and patch within 7 days for critical issue
 
 ## Scope
 
-- `@hypermemory/core`, `@hypermemory/visualizer-core`, `@hypermemory/react`, `@hypermemory/svelte` packages.
+- `@runstack-ai/hypermemory-core`, `@runstack-ai/hypermemory-visualizer-core`, `@runstack-ai/hypermemory-react`, `@runstack-ai/hypermemory-svelte` packages.
 - The `skill/SKILL.md` agent integration file.
 
 ## Out of scope

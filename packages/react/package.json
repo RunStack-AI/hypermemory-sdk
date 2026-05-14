@@ -1,5 +1,5 @@
 {
-	"name": "@hypermemory/react",
+	"name": "@runstack-ai/hypermemory-react",
 	"version": "1.0.0",
 	"description": "HyperMemory React 18+ components — graph visualization and client hooks",
 	"type": "module",
@@ -24,11 +24,15 @@
 		"dev": "tsup --watch",
 		"typecheck": "tsc --noEmit"
 	},
+	"publishConfig": {
+		"registry": "https://npm.pkg.github.com",
+		"access": "public"
+	},
 	"peerDependencies": {
 		"react": "^18.0.0 || ^19.0.0",
 		"react-dom": "^18.0.0 || ^19.0.0",
-		"@hypermemory/core": "workspace:*",
-		"@hypermemory/visualizer-core": "workspace:*"
+		"@runstack-ai/hypermemory-core": "workspace:*",
+		"@runstack-ai/hypermemory-visualizer-core": "workspace:*"
 	},
 	"devDependencies": {
 		"react": "^18.3.0",
@@ -37,9 +41,14 @@
 		"@types/react-dom": "^18.3.0",
 		"tsup": "^8.3.0",
 		"typescript": "^5.6.0",
-		"@hypermemory/core": "workspace:*",
-		"@hypermemory/visualizer-core": "workspace:*"
+		"@runstack-ai/hypermemory-core": "workspace:*",
+		"@runstack-ai/hypermemory-visualizer-core": "workspace:*"
 	},
 	"keywords": ["hypermemory", "react", "graph", "visualization"],
-	"license": "MIT"
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/RunStack-AI/hypermemory-sdk.git",
+		"directory": "packages/react"
+	}
 }

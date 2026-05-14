@@ -6,7 +6,7 @@
  *
  * @example
  * ```tsx
- * import { HyperMemoryProvider } from "@hypermemory/react";
+ * import { HyperMemoryProvider } from "@runstack-ai/hypermemory-react";
  *
  * function App() {
  *   return (
@@ -18,7 +18,7 @@
  * ```
  */
 
-import { HyperMemoryClient } from "@hypermemory/core";
+import { HyperMemoryClient } from "@runstack-ai/hypermemory-core";
 import { type ReactNode, useMemo } from "react";
 import { HyperMemoryContext } from "./context.js";
 

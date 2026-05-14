@@ -6,7 +6,7 @@
  *
  * @example
  * ```typescript
- * import { ForceGraph3DViewer } from "@hypermemory/visualizer-core";
+ * import { ForceGraph3DViewer } from "@runstack-ai/hypermemory-visualizer-core";
  *
  * const viewer = new ForceGraph3DViewer(document.getElementById("graph")!, {
  *   onNodeClick: (node) => console.log("Clicked:", node.node_key),

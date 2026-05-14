@@ -1,6 +1,6 @@
 <script lang="ts">
-import { type ForceGraph3DOptions, ForceGraph3DViewer } from "@hypermemory/visualizer-core";
-import type { GraphLink, GraphNode } from "@hypermemory/visualizer-core";
+import { type ForceGraph3DOptions, ForceGraph3DViewer } from "@runstack-ai/hypermemory-visualizer-core";
+import type { GraphLink, GraphNode } from "@runstack-ai/hypermemory-visualizer-core";
 import { onDestroy, onMount } from "svelte";
 import { useHyperMemory } from "./useHyperMemory.svelte.js";
 

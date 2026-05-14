@@ -3,7 +3,7 @@
  *
  * @example
  * ```typescript
- * import { HyperMemoryClient } from "@hypermemory/core";
+ * import { HyperMemoryClient } from "@runstack-ai/hypermemory-core";
  *
  * const hm = new HyperMemoryClient({ apiKey: "hm_your_api_key" });
  *
@@ -15,13 +15,16 @@
 import { HttpClient } from "./http.js";
 import type {
 	AddRelationshipsRequest,
+	AddRelationshipsResponse,
 	ClientOptions,
 	ExportOptions,
+	ExportResponse,
 	FindRelatedRequest,
+	FindRelatedResponse,
 	ForgetResponse,
 	IngestRequest,
 	IngestResponse,
-	NodeRelationship,
+	NodeRelationshipsResponse,
 	OverviewResponse,
 	PublicGraphResponse,
 	RateLimitInfo,
@@ -163,7 +166,7 @@ export class HyperMemoryClient {
 	 * Delete a node from the hypergraph.
 	 *
 	 * @param key - Node key to delete
-	 * @param cascade - Whether to also delete orphaned relationships (default: false)
+	 * @param cascade - Whether to also delete orphaned relationships (default: true)
 	 * @returns Deletion confirmation
 	 *
 	 * @throws {AuthenticationError} Invalid API key
@@ -172,10 +175,11 @@ export class HyperMemoryClient {
 	 *
 	 * @example
 	 * ```typescript
-	 * await hm.forget("person_old_contact", true); // cascade delete
+	 * await hm.forget("person_old_contact"); // cascade delete (default)
+	 * await hm.forget("person_old_contact", false); // delete node only
 	 * ```
 	 */
-	async forget(key: string, cascade = false, options?: MethodOptions): Promise<ForgetResponse> {
+	async forget(key: string, cascade = true, options?: MethodOptions): Promise<ForgetResponse> {
 		return this.http.request<ForgetResponse>({
 			method: "POST",
 			path: "/api/v1/memory/forget",
@@ -222,7 +226,7 @@ export class HyperMemoryClient {
 	 *   text: "Jane joined Acme Corp as CTO in 2025. She previously worked at Google.",
 	 *   context: "career update",
 	 * });
-	 * console.log(`Created ${result.nodes_created} nodes, ${result.edges_created} edges`);
+	 * console.log(`Created ${result.nodes_created} nodes, ${result.edges_created ?? 0} edges`);
 	 * ```
 	 */
 	async ingest(request: IngestRequest, options?: MethodOptions): Promise<IngestResponse> {
@@ -235,11 +239,11 @@ export class HyperMemoryClient {
 	}
 
 	/**
-	 * Get relationships for a specific node.
+	 * Get relationships for a specific node (both binary edges and hyperedges).
 	 *
 	 * @param key - Node key to get relationships for
 	 * @param pattern - Optional regex pattern to filter relationship types
-	 * @returns Array of relationships connected to the node
+	 * @returns Binary edges and hyperedges connected to the node
 	 *
 	 * @throws {AuthenticationError} Invalid API key
 	 * @throws {NotFoundError} Node does not exist
@@ -247,8 +251,11 @@ export class HyperMemoryClient {
 	 * @example
 	 * ```typescript
 	 * const rels = await hm.getRelationships("person_jane");
-	 * for (const r of rels) {
-	 *   console.log(`${r.from_key} —[${r.relationship}]→ ${r.to_key}`);
+	 * for (const e of rels.binary_edges) {
+	 *   console.log(`${e.in_node} —[${e.relationship}]→ ${e.out_node}`);
+	 * }
+	 * for (const h of rels.hyperedges) {
+	 *   console.log(`Hyperedge: ${h.relationship} — ${h.participants.join(", ")}`);
 	 * }
 	 * ```
 	 */
@@ -256,10 +263,10 @@ export class HyperMemoryClient {
 		key: string,
 		pattern?: string,
 		options?: MethodOptions,
-	): Promise<NodeRelationship[]> {
+	): Promise<NodeRelationshipsResponse> {
 		const params: Record<string, string> = {};
 		if (pattern) params.pattern = pattern;
-		return this.http.request<NodeRelationship[]>({
+		return this.http.request<NodeRelationshipsResponse>({
 			method: "GET",
 			path: `/api/v1/memory/relationships/${encodeURIComponent(key)}`,
 			params,
@@ -270,8 +277,8 @@ export class HyperMemoryClient {
 	/**
 	 * Add relationships between existing nodes.
 	 *
-	 * @param request - Relationships to create
-	 * @returns Confirmation
+	 * @param request - Relationships to create (binary or hyperedge via participant_keys)
+	 * @returns Created relationships and any errors
 	 *
 	 * @throws {AuthenticationError} Invalid API key
 	 * @throws {ValidationError} Invalid node keys
@@ -279,18 +286,19 @@ export class HyperMemoryClient {
 	 *
 	 * @example
 	 * ```typescript
-	 * await hm.addRelationships({
+	 * const result = await hm.addRelationships({
 	 *   relationships: [
 	 *     { from_key: "person_jane", to_key: "tech_rust", relationship: "is learning" },
 	 *   ],
 	 * });
+	 * console.log(`Created: ${result.created.length}, Errors: ${result.errors.length}`);
 	 * ```
 	 */
 	async addRelationships(
 		request: AddRelationshipsRequest,
 		options?: MethodOptions,
-	): Promise<{ created: number }> {
-		return this.http.request<{ created: number }>({
+	): Promise<AddRelationshipsResponse> {
+		return this.http.request<AddRelationshipsResponse>({
 			method: "POST",
 			path: "/api/v1/memory/relationships",
 			body: request,
@@ -302,7 +310,7 @@ export class HyperMemoryClient {
 	 * Find related nodes via graph traversal from a starting node.
 	 *
 	 * @param request - Traversal parameters
-	 * @returns Related nodes with relationship paths
+	 * @returns Related nodes with relationship paths and optional scores
 	 *
 	 * @throws {AuthenticationError} Invalid API key
 	 * @throws {NotFoundError} Start node does not exist
@@ -314,10 +322,13 @@ export class HyperMemoryClient {
 	 *   query: "technologies",
 	 *   max_nodes: 20,
 	 * });
+	 * for (const r of related.results) {
+	 *   console.log(`${r.key}: ${r.description} (hop: ${r.hop})`);
+	 * }
 	 * ```
 	 */
-	async findRelated(request: FindRelatedRequest, options?: MethodOptions): Promise<RecallResponse> {
-		return this.http.request<RecallResponse>({
+	async findRelated(request: FindRelatedRequest, options?: MethodOptions): Promise<FindRelatedResponse> {
+		return this.http.request<FindRelatedResponse>({
 			method: "POST",
 			path: "/api/v1/memory/find-related",
 			body: request,
@@ -329,14 +340,14 @@ export class HyperMemoryClient {
 	 * Write a timeline event.
 	 *
 	 * @param request - Event summary and optional metadata
-	 * @returns Write confirmation with timestamp
+	 * @returns Created event with ID and timestamp
 	 *
 	 * @throws {AuthenticationError} Invalid API key
-	 * @throws {RateLimitError} Write rate limit exceeded
 	 *
 	 * @example
 	 * ```typescript
-	 * await hm.timelineWrite({ summary: "User completed onboarding", meta: { step: 5 } });
+	 * const event = await hm.timelineWrite({ summary: "User completed onboarding", meta: { step: 5 } });
+	 * console.log(`Event ${event.id} created at ${event.ts}`);
 	 * ```
 	 */
 	async timelineWrite(
@@ -363,7 +374,7 @@ export class HyperMemoryClient {
 	 * ```typescript
 	 * const timeline = await hm.timelineRead({ period: "7d", limit: 20 });
 	 * for (const event of timeline.events) {
-	 *   console.log(`[${event.timestamp}] ${event.summary}`);
+	 *   console.log(`[${event.ts}] ${event.summary} (${event.source})`);
 	 * }
 	 * ```
 	 */
@@ -380,26 +391,31 @@ export class HyperMemoryClient {
 	}
 
 	/**
-	 * Export the entire graph as JSON or CSV.
+	 * Export the entire graph as JSON.
 	 *
-	 * @param options - Export format options
-	 * @returns Full graph data
+	 * The response `data` field contains the full exported graph as a JSON string.
+	 * Parse it to access nodes, edges, hyperedges, and ontology.
+	 *
+	 * @param exportOptions - Export options (ontology, session data)
+	 * @returns Export metadata and the full graph data as a JSON string
 	 *
 	 * @throws {AuthenticationError} Invalid API key
 	 *
 	 * @example
 	 * ```typescript
-	 * const data = await hm.exportGraph({ format: "json", include_data: true });
+	 * const result = await hm.exportGraph({ include_ontology: true });
+	 * console.log(`Exported ${result.node_count} nodes in ${result.duration_seconds}s`);
+	 * const graph = JSON.parse(result.data);
 	 * ```
 	 */
 	async exportGraph(
 		exportOptions?: ExportOptions,
 		options?: MethodOptions,
-	): Promise<PublicGraphResponse> {
+	): Promise<ExportResponse> {
 		const params: Record<string, string> = {};
-		if (exportOptions?.format) params.format = exportOptions.format;
-		if (exportOptions?.include_data) params.include_data = "true";
-		return this.http.request<PublicGraphResponse>({
+		if (exportOptions?.include_ontology !== undefined) params.include_ontology = String(exportOptions.include_ontology);
+		if (exportOptions?.include_session_data) params.include_session_data = "true";
+		return this.http.request<ExportResponse>({
 			method: "GET",
 			path: "/api/v1/memory/export",
 			params,
@@ -408,12 +424,15 @@ export class HyperMemoryClient {
 	}
 
 	/**
-	 * Get a public graph by its ID (no authentication required for public graphs).
+	 * Get a graph by its ID. Requires a valid `hm_*` API key.
+	 * The graph must have `api_access` enabled and belong to the same account as the key.
 	 *
 	 * @param graphId - Graph identifier (e.g. "graph:abc123")
-	 * @returns Nodes and links of the public graph
+	 * @returns Nodes and links of the graph
 	 *
-	 * @throws {NotFoundError} Graph does not exist or is not public
+	 * @throws {AuthenticationError} Invalid API key
+	 * @throws {ForbiddenError} API access not enabled or key doesn't own this graph
+	 * @throws {NotFoundError} Graph does not exist
 	 *
 	 * @example
 	 * ```typescript
@@ -424,7 +443,7 @@ export class HyperMemoryClient {
 	async getPublicGraph(graphId: string, options?: MethodOptions): Promise<PublicGraphResponse> {
 		return this.http.request<PublicGraphResponse>({
 			method: "GET",
-			path: `/api/graphs/${encodeURIComponent(graphId)}/public`,
+			path: `/api/v1/graphs/${encodeURIComponent(graphId)}/public`,
 			signal: options?.signal,
 		});
 	}

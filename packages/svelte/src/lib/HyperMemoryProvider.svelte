@@ -1,5 +1,5 @@
 <script lang="ts">
-import { HyperMemoryClient } from "@hypermemory/core";
+import { HyperMemoryClient } from "@runstack-ai/hypermemory-core";
 import { setContext } from "svelte";
 
 interface Props {

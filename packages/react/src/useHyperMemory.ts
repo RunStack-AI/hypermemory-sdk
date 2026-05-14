@@ -12,7 +12,7 @@
  *
  * @example
  * ```tsx
- * import { useHyperMemory } from "@hypermemory/react";
+ * import { useHyperMemory } from "@runstack-ai/hypermemory-react";
  *
  * function MyComponent() {
  *   const hm = useHyperMemory();
@@ -27,7 +27,7 @@
  * ```
  */
 
-import type { HyperMemoryClient } from "@hypermemory/core";
+import type { HyperMemoryClient } from "@runstack-ai/hypermemory-core";
 import { useContext } from "react";
 import { HyperMemoryContext } from "./context.js";
 

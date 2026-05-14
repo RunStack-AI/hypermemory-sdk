@@ -10,7 +10,7 @@
  * @example
  * ```svelte
  * <script>
- *   import { useHyperMemory } from "@hypermemory/svelte";
+ *   import { useHyperMemory } from "@runstack-ai/hypermemory-svelte";
  *   const hm = useHyperMemory();
  *
  *   async function search() {
@@ -20,7 +20,7 @@
  * ```
  */
 
-import type { HyperMemoryClient } from "@hypermemory/core";
+import type { HyperMemoryClient } from "@runstack-ai/hypermemory-core";
 import { getContext } from "svelte";
 
 export function useHyperMemory(): HyperMemoryClient {

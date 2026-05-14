@@ -1,5 +1,5 @@
 /**
- * @hypermemory/core
+ * @runstack-ai/hypermemory-core
  *
  * Official HyperMemory SDK for building applications on the HyperMemory hypergraph.
  * Store, recall, traverse, and visualize interconnected knowledge.
@@ -26,15 +26,21 @@ export {
 } from "./errors.js";
 export type {
 	AddRelationshipsRequest,
+	AddRelationshipsResponse,
+	BinaryEdge,
 	ClientOptions,
 	ExportOptions,
+	ExportResponse,
 	FindRelatedRequest,
+	FindRelatedResponse,
+	FindRelatedResult,
 	ForgetResponse,
 	GraphLink,
 	GraphNode,
+	HyperedgeDetail,
 	IngestRequest,
 	IngestResponse,
-	NodeRelationship,
+	NodeRelationshipsResponse,
 	OverviewResponse,
 	PublicGraphResponse,
 	RateLimitInfo,

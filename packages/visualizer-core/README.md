@@ -1,4 +1,4 @@
-# @hypermemory/visualizer-core
+# @runstack-ai/hypermemory-visualizer-core
 
 Framework-agnostic graph visualization for HyperMemory hypergraphs. Provides two viewer classes:
 
@@ -9,17 +9,17 @@ Framework-agnostic graph visualization for HyperMemory hypergraphs. Provides two
 
 ```bash
 # For 2D visualization
-pnpm add @hypermemory/visualizer-core @cosmograph/cosmograph
+pnpm add @runstack-ai/hypermemory-visualizer-core @cosmograph/cosmograph
 
 # For 3D visualization
-pnpm add @hypermemory/visualizer-core 3d-force-graph three
+pnpm add @runstack-ai/hypermemory-visualizer-core 3d-force-graph three
 pnpm add -D @types/three  # Required for TypeScript users
 ```
 
 ## Minimum Example
 
 ```typescript
-import { CosmographViewer } from "@hypermemory/visualizer-core";
+import { CosmographViewer } from "@runstack-ai/hypermemory-visualizer-core";
 
 const viewer = new CosmographViewer(document.getElementById("graph")!, {
   onNodeClick: (node) => console.log(node),

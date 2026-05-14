@@ -1,6 +1,6 @@
 <script lang="ts">
-import { CosmographViewer, type CosmographViewerOptions } from "@hypermemory/visualizer-core";
-import type { GraphLink, GraphNode, HyperedgeHull } from "@hypermemory/visualizer-core";
+import { CosmographViewer, type CosmographViewerOptions } from "@runstack-ai/hypermemory-visualizer-core";
+import type { GraphLink, GraphNode, HyperedgeHull } from "@runstack-ai/hypermemory-visualizer-core";
 import { onDestroy, onMount } from "svelte";
 import { useHyperMemory } from "./useHyperMemory.svelte.js";
 

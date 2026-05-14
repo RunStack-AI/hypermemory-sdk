@@ -1,17 +1,17 @@
-# @hypermemory/svelte
+# @runstack-ai/hypermemory-svelte
 
 Svelte 5 components and composable for HyperMemory graph visualization and client access. Uses runes (`$state`, `$derived`, `$effect`) throughout.
 
 ## Install
 
 ```bash
-pnpm add @hypermemory/core @hypermemory/svelte
+pnpm add @runstack-ai/hypermemory-core @runstack-ai/hypermemory-svelte
 
 # For 2D visualization (optional)
-pnpm add @hypermemory/visualizer-core @cosmograph/cosmograph
+pnpm add @runstack-ai/hypermemory-visualizer-core @cosmograph/cosmograph
 
 # For 3D visualization (optional)
-pnpm add @hypermemory/visualizer-core 3d-force-graph three
+pnpm add @runstack-ai/hypermemory-visualizer-core 3d-force-graph three
 pnpm add -D @types/three
 ```
 
@@ -19,7 +19,7 @@ pnpm add -D @types/three
 
 ```svelte
 <script>
-  import { HyperMemoryProvider, HyperMemoryGraph2D, useHyperMemory } from "@hypermemory/svelte";
+  import { HyperMemoryProvider, HyperMemoryGraph2D, useHyperMemory } from "@runstack-ai/hypermemory-svelte";
 </script>
 
 <HyperMemoryProvider apiKey="hm_your_key">
@@ -37,7 +37,7 @@ pnpm add -D @types/three
 - `HyperMemoryGraph2D` — 2D Cosmograph wrapper component
 - `HyperMemoryGraph3D` — 3D Force Graph wrapper component
 - `useHyperMemory()` — Runes-based composable returning the `HyperMemoryClient` from context
-- Types: re-exports from `@hypermemory/core` and `@hypermemory/visualizer-core`
+- Types: re-exports from `@runstack-ai/hypermemory-core` and `@runstack-ai/hypermemory-visualizer-core`
 
 ## Full Docs
 

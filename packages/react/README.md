@@ -1,24 +1,24 @@
-# @hypermemory/react
+# @runstack-ai/hypermemory-react
 
 React 18+ components and hook for HyperMemory graph visualization and client access. All exports carry `"use client"` directives for Next.js App Router compatibility.
 
 ## Install
 
 ```bash
-pnpm add @hypermemory/core @hypermemory/react
+pnpm add @runstack-ai/hypermemory-core @runstack-ai/hypermemory-react
 
 # For 2D visualization (optional)
-pnpm add @hypermemory/visualizer-core @cosmograph/cosmograph
+pnpm add @runstack-ai/hypermemory-visualizer-core @cosmograph/cosmograph
 
 # For 3D visualization (optional)
-pnpm add @hypermemory/visualizer-core 3d-force-graph three
+pnpm add @runstack-ai/hypermemory-visualizer-core 3d-force-graph three
 pnpm add -D @types/three
 ```
 
 ## Minimum Example
 
 ```tsx
-import { HyperMemoryProvider, HyperMemoryGraph2D, useHyperMemory } from "@hypermemory/react";
+import { HyperMemoryProvider, HyperMemoryGraph2D, useHyperMemory } from "@runstack-ai/hypermemory-react";
 
 function App() {
   return (
