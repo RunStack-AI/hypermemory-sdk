@@ -1,6 +1,6 @@
 # HyperMemory SDK
 
-Official TypeScript SDK for the [HyperMemory](https://hypermemory.io) knowledge graph platform. Store, recall, traverse, and visualize interconnected knowledge — from any JavaScript/TypeScript environment.
+Official TypeScript SDK for the [HyperMemory](https://hypermemory.io) agentic long-term memory platform. Store, recall, traverse, and visualize interconnected memories — from any JavaScript/TypeScript environment.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
