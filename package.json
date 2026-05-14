@@ -1,0 +1,29 @@
+{
+  "name": "hypermemory-sdk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "HyperMemory SDK monorepo — client, visualization, Svelte & React bindings",
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm -r --parallel dev",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RunStack-AI/hypermemory-sdk.git"
+  },
+  "license": "MIT"
+}

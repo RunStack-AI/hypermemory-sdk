@@ -1,0 +1,36 @@
+{
+  "name": "@hypermemory/svelte",
+  "version": "0.1.0",
+  "description": "HyperMemory Svelte 5 components — graph visualization and client hooks",
+  "type": "module",
+  "svelte": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "svelte": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "svelte-package",
+    "dev": "svelte-package --watch",
+    "typecheck": "svelte-check --tsconfig ./tsconfig.json"
+  },
+  "peerDependencies": {
+    "svelte": "^5.0.0",
+    "@hypermemory/core": "workspace:*",
+    "@hypermemory/visualizer-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@sveltejs/package": "^2.3.0",
+    "svelte": "^5.0.0",
+    "svelte-check": "^4.0.0",
+    "typescript": "^5.6.0",
+    "@hypermemory/core": "workspace:*",
+    "@hypermemory/visualizer-core": "workspace:*"
+  },
+  "keywords": ["hypermemory", "svelte", "graph", "visualization"],
+  "license": "MIT"
+}
