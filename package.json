@@ -1,6 +1,6 @@
 {
 	"name": "hypermemory-sdk",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"private": true,
 	"description": "HyperMemory SDK monorepo — client, visualization, Svelte & React bindings",
 	"type": "module",

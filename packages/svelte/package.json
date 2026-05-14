@@ -1,6 +1,6 @@
 {
 	"name": "@hypermemory/svelte",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"description": "HyperMemory Svelte 5 components — graph visualization and client hooks",
 	"type": "module",
 	"svelte": "./dist/index.js",

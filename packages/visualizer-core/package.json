@@ -1,6 +1,6 @@
 {
 	"name": "@hypermemory/visualizer-core",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"description": "HyperMemory graph visualization — Cosmograph 2D and 3D Force Graph viewers",
 	"type": "module",
 	"main": "./dist/index.cjs",

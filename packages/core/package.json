@@ -1,6 +1,6 @@
 {
 	"name": "@hypermemory/core",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"description": "HyperMemory client SDK — store, recall, and traverse hypergraphs",
 	"type": "module",
 	"main": "./dist/index.cjs",
