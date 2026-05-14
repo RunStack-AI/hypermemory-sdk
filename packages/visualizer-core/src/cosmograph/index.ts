@@ -8,13 +8,14 @@
  * ```typescript
  * import { CosmographViewer } from "@hypermemory/visualizer-core";
  *
+ * // showHyperedges defaults to false; set true and pass hyperedges to setData to render hulls
  * const viewer = new CosmographViewer(document.getElementById("graph")!, {
  *   showHyperedges: true,
  *   onNodeClick: (node) => console.log("Clicked:", node.node_key),
  *   onHullClick: (hull) => console.log("Hull:", hull.label),
  * });
  *
- * viewer.setData(nodes, links, hyperedges);
+ * await viewer.setData(nodes, links, hyperedges);
  * ```
  */
 
@@ -125,7 +126,9 @@ export class CosmographViewer {
 		this.highlightNodes(null);
 	}
 
-	/** Toggle hyperedge hull rendering visibility. */
+	/** Toggle hyperedge hull rendering visibility.
+	 *  Calling `toggleHyperedges(true)` requires that hyperedges were passed to
+	 *  `setData(nodes, links, hyperedges)`; otherwise nothing is drawn. */
 	toggleHyperedges(show: boolean): void {
 		this.showHyperedges = show;
 		if (this.hullCanvas) {

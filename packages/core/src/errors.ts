@@ -9,7 +9,8 @@ export class HyperMemoryError extends Error {
 	readonly status: number;
 	/** Machine-readable error code */
 	readonly code: string;
-	/** Raw response body (if available) */
+	/** Raw response body as returned by the server (may be JSON-as-string or plain text).
+	 *  Treat as opaque — log it, but don't parse it for control flow; use `code` instead. */
 	readonly body?: string;
 
 	constructor(message: string, status: number, code: string, body?: string) {

@@ -5,6 +5,11 @@
  *
  * Must be used inside a `<HyperMemoryProvider>` tree.
  *
+ * Note: The provider creates a new `HyperMemoryClient` when `apiKey`, `baseUrl`,
+ * `maxRetries`, `timeout`, or `onRequest` change. Components that need the latest
+ * client should call `useHyperMemory()` on every render rather than caching the
+ * result in a `useRef` or module-level variable.
+ *
  * @example
  * ```tsx
  * import { useHyperMemory } from "@hypermemory/react";

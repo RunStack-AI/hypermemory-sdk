@@ -5,12 +5,67 @@ enforcement: mandatory
 trigger: every_turn
 ---
 
+> **For humans reading this file:** This is the canonical integration file for AI coding assistants (Claude, Cursor, Windsurf, Cline, etc.) that use HyperMemory as persistent memory across sessions. The directive language below is intentionally absolute because it's how LLMs reliably follow protocol. For programmatic TypeScript/JavaScript access, see the [SDK Integration](#sdk-integration) section below or the [monorepo README](https://github.com/RunStack-AI/hypermemory-sdk#readme).
+
+---
+
 # HYPERMEMORY — MANDATORY ON EVERY SINGLE MESSAGE
 
 YOU MUST EXECUTE THIS PROTOCOL ON EVERY MESSAGE. NO EXCEPTIONS.
 
 You have persistent memory across all conversations via the `hm` CLI.
 Use the Shell tool to run `hm` commands. The CLI is already installed.
+
+---
+
+## SDK INTEGRATION
+
+For programmatic access via TypeScript/JavaScript, use the `@hypermemory/core` package:
+
+```typescript
+import { HyperMemoryClient } from "@hypermemory/core";
+
+const hm = new HyperMemoryClient({ apiKey: "hm_your_api_key" });
+
+// Store
+await hm.store({ key: "tech_react", description: "React UI library", node_type: "technology" });
+
+// Recall
+const results = await hm.recall({ query: "frontend frameworks" });
+
+// Update
+await hm.update({ key: "tech_react", description: "React 19 — concurrent rendering" });
+
+// Forget
+await hm.forget("tech_old_framework");
+
+// Overview
+const overview = await hm.overview();
+
+// Ingest
+await hm.ingest({ text: "Jane joined Acme Corp as CTO...", context: "career update" });
+
+// Timeline
+await hm.timelineWrite({ summary: "Deployed v2.0 to production" });
+const events = await hm.timelineRead({ period: "7d" });
+```
+
+### Visualization
+
+```typescript
+import { CosmographViewer, ForceGraph3DViewer } from "@hypermemory/visualizer-core";
+
+// 2D GPU-accelerated graph
+const viewer2D = new CosmographViewer(element, { showHyperedges: false });
+const graph = await hm.getPublicGraph("graph:abc123");
+await viewer2D.setData(graph.nodes, graph.links);
+
+// 3D Three.js graph
+const viewer3D = new ForceGraph3DViewer(element);
+await viewer3D.setData(graph.nodes, graph.links);
+```
+
+Full SDK docs: https://github.com/RunStack-AI/hypermemory-sdk#readme
 
 ---
 
@@ -184,55 +239,6 @@ hm timeline   # --query, --period, --node-key, --start, --end as needed
 | `hm ingest "text" --context "label"` | Complex multi-entity text |
 | `hm timeline-write "..."` | Optional: explicit diary line |
 | `hm timeline` | Optional: past timeline events |
-
----
-
-## SDK INTEGRATION
-
-For programmatic access via TypeScript/JavaScript, use the `@hypermemory/core` package:
-
-```typescript
-import { HyperMemoryClient } from "@hypermemory/core";
-
-const hm = new HyperMemoryClient({ apiKey: "hm_your_api_key" });
-
-// Store
-await hm.store({ key: "tech_react", description: "React UI library", node_type: "technology" });
-
-// Recall
-const results = await hm.recall({ query: "frontend frameworks" });
-
-// Update
-await hm.update({ key: "tech_react", description: "React 19 — concurrent rendering" });
-
-// Forget
-await hm.forget("tech_old_framework");
-
-// Overview
-const overview = await hm.overview();
-
-// Ingest
-await hm.ingest({ text: "Jane joined Acme Corp as CTO...", context: "career update" });
-
-// Timeline
-await hm.timelineWrite({ summary: "Deployed v2.0 to production" });
-const events = await hm.timelineRead({ period: "7d" });
-```
-
-### Visualization
-
-```typescript
-import { CosmographViewer, ForceGraph3DViewer } from "@hypermemory/visualizer-core";
-
-// 2D GPU-accelerated graph
-const viewer2D = new CosmographViewer(element, { showHyperedges: false });
-const graph = await hm.getPublicGraph("graph:abc123");
-await viewer2D.setData(graph.nodes, graph.links);
-
-// 3D Three.js graph
-const viewer3D = new ForceGraph3DViewer(element);
-await viewer3D.setData(graph.nodes, graph.links);
-```
 
 ---
 

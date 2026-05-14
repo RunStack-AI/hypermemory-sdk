@@ -1,14 +1,16 @@
 # @hypermemory/core
 
-Framework-agnostic TypeScript client for the HyperMemory hypergraph API.
+Framework-agnostic TypeScript client for the HyperMemory hypergraph API. Zero external dependencies — uses native `fetch`.
 
-## Installation
+## Install
 
 ```bash
 pnpm add @hypermemory/core
+# or
+npm install @hypermemory/core
 ```
 
-## Usage
+## Minimum Example
 
 ```typescript
 import { HyperMemoryClient } from "@hypermemory/core";
@@ -24,7 +26,16 @@ await hm.store({
 const results = await hm.recall({ query: "frontend frameworks" });
 ```
 
-See the [root README](../../README.md) for full API reference.
+## Exports
+
+- `HyperMemoryClient` — the main client class
+- `HttpClient` — low-level HTTP transport (advanced)
+- `MethodOptions`, `ClientOptions`, request/response types
+- 11 error classes: `HyperMemoryError`, `AuthenticationError`, `ForbiddenError`, `BadRequestError`, `NotFoundError`, `ValidationError`, `RateLimitError`, `PlanLimitError`, `ServerError`, `NetworkError`, `TimeoutError`
+
+## Full Docs
+
+See the [monorepo README](https://github.com/RunStack-AI/hypermemory-sdk#readme).
 
 ## License
 

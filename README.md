@@ -32,7 +32,17 @@ pnpm add 3d-force-graph three
 pnpm add -D @types/three  # Required for TypeScript projects
 ```
 
-**Requirements:** Node.js >= 18.0.0
+**Requirements:** Node.js >= 18.0.0 | Native `fetch` required | Tested on Node 18+, Chrome/Edge 90+, Firefox 88+, Safari 14+. `AbortSignal.any` is polyfilled for older runtimes.
+
+## Concepts
+
+A **node** is a unit of memory — a person, decision, project, fact, etc. Each node has a `key` (`{type}_{name}` like `person_jane` or `decision_jwt_auth`), a free-text `description`, and an optional `node_type` (the SDK provides 20 axiom types for color/categorization, but any string is valid).
+
+A **relationship** is a directed edge between two nodes with a plain-language label describing how they connect. The label *is* the relationship — be specific ("leads engineering at"), not generic ("uses").
+
+A **hyperedge** groups 3+ nodes under a single indivisible relationship — for things no chain of pairwise edges can express (a team where all members are jointly necessary, a decision context that requires every participant).
+
+The graph is searched semantically by `recall()` (vector similarity over descriptions) or traversed structurally by `findRelated()` from a starting node.
 
 ## Quick Start
 
@@ -119,6 +129,54 @@ const graph = await client.getPublicGraph("graph:your_id");
 await viewer.setData(graph.nodes, graph.links, graph.hyperedges);
 ```
 
+### Server-Side Rendering (Next.js App Router, SvelteKit)
+
+The framework bindings are **client-only**. All React components carry a `"use client";` directive; Svelte components mount via `onMount` and only render in the browser. Importing them from a server component in Next.js works (they'll be deferred), but they will not render any output on the server.
+
+If you call `HyperMemoryClient` directly from a server route (e.g. Next.js Route Handler, SvelteKit `+page.server.ts`), use the `@hypermemory/core` package — no DOM dependencies, native `fetch` only.
+
+## Cancellation
+
+Every client method accepts an optional `AbortSignal` for cancellation:
+
+```typescript
+const ac = new AbortController();
+
+setTimeout(() => ac.abort(), 5000); // cancel after 5s
+
+try {
+  const results = await hm.recall({ query: "..." }, { signal: ac.signal });
+} catch (err) {
+  if (err instanceof NetworkError && err.message === "Request was cancelled") {
+    // handle cancellation
+  }
+}
+```
+
+This is the recommended pattern for keystroke-driven search UIs and for cancelling in-flight requests on unmount in React/Svelte components.
+
+## Observability
+
+Pass an `onRequest` callback to the client (or to the React/Svelte `<HyperMemoryProvider>`) to observe every HTTP attempt:
+
+```typescript
+const hm = new HyperMemoryClient({
+  apiKey: "hm_...",
+  onRequest: (method, url, status, durationMs) => {
+    console.log(`${method} ${url} → ${status} (${durationMs}ms)`);
+  },
+});
+```
+
+The callback fires exactly once per attempt, including retries. Status is `0` for network errors and timeouts.
+
+Use `client.getRateLimit()` to read the most recent rate-limit headers:
+
+```typescript
+const rl = hm.getRateLimit();
+if (rl) console.log(`${rl.remaining}/${rl.limit} requests remaining, resets at ${rl.resetAt}`);
+```
+
 ## API Reference
 
 ### `@hypermemory/core`
@@ -178,6 +236,8 @@ viewer.pause();
 viewer.resume();
 viewer.destroy();
 ```
+
+> **Note:** When `showHyperedges` is enabled, clicking a node that sits **inside** a hyperedge hull fires **both** `onNodeClick` and `onHullClick`. Branch on whichever you need, or set a stateful flag in your handler if you want exclusive handling.
 
 #### `ForceGraph3DViewer` (3D, Three.js)
 
@@ -250,7 +310,7 @@ try {
 - **429 (Rate Limited)** — retried on all methods (the server didn't process the request)
 - **502/503/504 (Server Error)** — retried only on `GET`/`HEAD`/`DELETE` (non-idempotent writes like POST are not retried to prevent double-writes)
 
-The `Retry-After` header is respected when present. Writes without an idempotency key are best-effort across network blips.
+The `Retry-After` header is respected when present. If you need writes to survive transient 5xx, send your own `Idempotency-Key` header by wrapping the SDK call yourself (or wait — first-class idempotency support is planned for v0.2).
 
 ## Rate Limits
 
@@ -263,6 +323,47 @@ Per-minute sliding window by plan:
 | Read (recall/overview/etc) | 30 | 60 | 120 | 240 | Custom |
 | HTTP mutations | 60/min | 120 | 300 | 600 | Custom |
 
+| Tier | Description |
+|------|-------------|
+| **Write** | Per-tool limit on logical operations (store/update/forget). Applies to both REST and MCP. |
+| **Ingest** | Per-tool limit on bulk ingestion endpoints. |
+| **Read** | Per-tool limit on retrieval (recall/overview/relationships/timeline). |
+| **HTTP mutations** | Overall raw HTTP POST/PUT/DELETE budget across all endpoints, regardless of tool. The effective cap is the minimum of the tool-specific limit and this. |
+
+## Authentication
+
+All API calls require a Bearer token with your `hm_*` API key:
+
+- Keys are generated during account provisioning or from the HyperMemory dashboard
+- Keys are HMAC-SHA256 validated server-side
+- Each request is independently authenticated (no sessions)
+
+### Using the same key with MCP
+
+The HyperMemory MCP server at `POST https://api.hypermemory.io/mcp` accepts the same `hm_*` Bearer token. This means a single key works for both the REST SDK (this package) and the MCP integration that powers AI agents. See the [HyperMemory docs](https://hypermemory.io/docs) for the MCP protocol details.
+
+## Going to Production
+
+- **Never put `hm_*` keys in browser-bundled code.** All Bearer-token calls should be made server-side or proxied. Public-graph reads (`getPublicGraph`) are the only call that's safe from a browser without a key.
+- **Memoize the `HyperMemoryClient` instance.** Each instance maintains its own retry/rate-limit state. The React/Svelte providers already do this — for vanilla use, hold a single module-level instance.
+- **Handle `RateLimitError.retryAfter` and `PlanLimitError` separately.** The first is transient (retry later); the second requires user action (upgrade plan).
+- **Tag requests via `onRequest`** for tracing — emit to your observability system of choice.
+- **Writes are not idempotent across network blips.** If you absolutely need exactly-once writes during partial failures, deduplicate at your application layer (until v0.2 ships first-class idempotency).
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---------|-------------|-----|
+| `AuthenticationError: Invalid API key` | Wrong key or expired | Verify your `hm_*` key in the dashboard |
+| `ValidationError` on `store` | Missing `key` or `description`, or `key` doesn't match `{type}_{name}` format | Check the request shape |
+| `RateLimitError` after a burst | Plan rate-limit hit | Slow down, or upgrade |
+| `PlanLimitError` | Monthly quota exhausted | Wait for reset or upgrade |
+| `NetworkError: Request was cancelled` | Your `AbortSignal` aborted | Expected, handle it |
+| `TimeoutError` | Server slow or network bad | Increase `timeout` option, check connectivity |
+| `useHyperMemory() must be used inside a <HyperMemoryProvider>` | Component rendered outside the provider tree | Wrap your tree |
+| 2D viewer shows "Install @cosmograph/cosmograph..." | Optional peer dep missing | `pnpm add @cosmograph/cosmograph` |
+| 3D viewer shows "Install 3d-force-graph and three..." | Optional peer deps missing | `pnpm add 3d-force-graph three @types/three` |
+
 ## AI Agent Skill File
 
 For AI coding assistants (Cursor, Windsurf, Cline, etc.), point them to the canonical skill file:
@@ -272,15 +373,6 @@ https://raw.githubusercontent.com/RunStack-AI/hypermemory-sdk/main/skill/SKILL.m
 ```
 
 This provides always-up-to-date instructions for using HyperMemory as persistent memory.
-
-## Authentication
-
-All API calls require a Bearer token with your `hm_*` API key:
-
-- Keys are generated during account provisioning or from the HyperMemory dashboard
-- Keys are HMAC-SHA256 validated server-side
-- Each request is independently authenticated (no sessions)
-- The MCP endpoint (`POST /mcp`) also accepts the same `hm_*` key
 
 ## Development
 

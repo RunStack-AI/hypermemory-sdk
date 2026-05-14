@@ -37,7 +37,16 @@ import type {
 	UpdateResponse,
 } from "./types.js";
 
-/** Options that can be passed to any client method for per-request control. */
+/**
+ * Per-call options accepted by every client method.
+ *
+ * @example
+ * ```typescript
+ * const ac = new AbortController();
+ * const results = await hm.recall({ query: "..." }, { signal: ac.signal });
+ * // ac.abort() to cancel
+ * ```
+ */
 export interface MethodOptions {
 	/** AbortSignal for cancellation */
 	signal?: AbortSignal;
@@ -66,6 +75,9 @@ export class HyperMemoryClient {
 
 	/**
 	 * Store a new node in the hypergraph.
+	 *
+	 * Target keys (`to_key`) in relationships may reference existing nodes or new ones —
+	 * non-existent targets are created as placeholder nodes.
 	 *
 	 * @param request - Node data including key, description, and optional relationships
 	 * @returns Confirmation of storage with detected types
@@ -96,6 +108,9 @@ export class HyperMemoryClient {
 
 	/**
 	 * Search the hypergraph using semantic or keyword matching.
+	 *
+	 * Pass `force_regex: true` to disable semantic search and use regex matching
+	 * against keys/descriptions. Pass `session_id` to scope results to a session.
 	 *
 	 * @param request - Query parameters
 	 * @returns Ranked results with relevance scores
